@@ -1,4 +1,4 @@
-import { REVIEW_LABEL } from './config.js'
+import { BUILD_LABEL } from './config.js'
 import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch } from './github.js'
 import { classify } from './sentiment.js'
 
@@ -8,7 +8,8 @@ import { classify } from './sentiment.js'
  * @returns {{ command: string, issue: object } | { merged: true, pr: object } | null}
  */
 export async function checkReview(username) {
-  const issues = await listIssues(REVIEW_LABEL, username)
+  // Review state = open PR linked to a build-labelled issue (no review label needed)
+  const issues = await listIssues(BUILD_LABEL, username)
   if (!issues.length) return null
 
   // Earliest created = highest priority
