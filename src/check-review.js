@@ -1,7 +1,6 @@
 import { REVIEW_LABEL } from './config.js'
-import { listIssues, findPRForIssue, listPRComments, mergePR, deleteBranch } from './github.js'
+import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch } from './github.js'
 import { classify } from './sentiment.js'
-import { getLastActioned, setLastActioned } from './state.js'
 
 /**
  * Check for issues in review state — find linked PR, inspect latest comment.
@@ -11,6 +10,9 @@ import { getLastActioned, setLastActioned } from './state.js'
 export async function checkReview(username) {
   const issues = await listIssues(REVIEW_LABEL, username)
   if (!issues.length) return null
+
+  // Earliest created = highest priority
+  issues.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
   for (const issue of issues) {
     const prs = await findPRForIssue(issue.number)
@@ -30,17 +32,9 @@ export async function checkReview(username) {
 
     if (!lastUserComment) continue  // No jevawin comment yet — still waiting
 
-    const lastActioned = getLastActioned(`pr-${pr.number}`)
-
-    if (lastActioned && lastActioned >= lastUserComment.id) {
-      // Already acted on this comment — skip
-      continue
-    }
-
     const sentiment = classify(lastUserComment.body)
 
     if (sentiment === 'approved') {
-      // Squash merge
       const commitTitle = `${pr.title} (#${pr.number})`
       await mergePR(pr.number, commitTitle)
       try {
@@ -48,13 +42,22 @@ export async function checkReview(username) {
       } catch {
         // Branch delete is best-effort
       }
-      setLastActioned(`pr-${pr.number}`, lastUserComment.id)
       return { merged: true, pr, issue }
     }
 
-    // Feedback (or any non-approval substantive comment) — run /clancy:once
-    setLastActioned(`pr-${pr.number}`, lastUserComment.id)
-    return { command: '/clancy:once', issue, pr }
+    // Feedback — only act if no commit has landed since the comment
+    const commits = await listPRCommits(pr.number)
+    const lastCommitDate = commits.length
+      ? new Date(commits[commits.length - 1].commit.committer.date)
+      : new Date(0)
+    const commentDate = new Date(lastUserComment.created_at)
+
+    if (lastCommitDate > commentDate) {
+      // Clancy already acted on this feedback — skip
+      continue
+    }
+
+    return { command: `/clancy:once --afk #${issue.number}`, issue, pr }
   }
 
   return null

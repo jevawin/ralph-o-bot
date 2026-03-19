@@ -2,7 +2,7 @@ import { BRIEF_LABEL } from './config.js'
 import { listIssues, listIssueComments } from './github.js'
 import { classify } from './sentiment.js'
 
-const BRIEF_MARKER = '## Clancy Strategic Brief'
+const BRIEF_MARKER = '# Clancy Strategic Brief'
 
 /**
  * Find most recent Clancy brief comment and any jevawin reply after it.
@@ -40,25 +40,29 @@ export async function checkBrief(username) {
   const issues = await listIssues(BRIEF_LABEL, username)
   if (!issues.length) return null
 
-  // Highest priority = first in list (GitHub returns most recently updated first)
-  const issue = issues[0]
-  const comments = await listIssueComments(issue.number)
-  const { hasBrief, response } = analyseComments(comments, username)
+  // Earliest created = highest priority
+  issues.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
-  if (!hasBrief) {
-    return { command: '/clancy:brief --afk', issue }
+  for (const issue of issues) {
+    const comments = await listIssueComments(issue.number)
+    const { hasBrief, response } = analyseComments(comments, username)
+
+    if (!hasBrief) {
+      return { command: `/clancy:brief --afk #${issue.number}`, issue }
+    }
+
+    const sentiment = classify(response?.body)
+
+    if (sentiment === 'approved') {
+      return { command: `/clancy:approve-brief --afk #${issue.number}`, issue }
+    }
+
+    if (sentiment === 'feedback') {
+      return { command: `/clancy:brief --afk #${issue.number}`, issue }
+    }
+
+    // Latest comment is Clancy's — skip to next ticket
   }
 
-  const sentiment = classify(response?.body)
-
-  if (sentiment === 'approved') {
-    return { command: '/clancy:approve-brief', issue }
-  }
-
-  if (sentiment === 'feedback') {
-    return { command: '/clancy:brief --afk', issue }
-  }
-
-  // No actionable response yet
   return null
 }

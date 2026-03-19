@@ -74,6 +74,11 @@ export async function mergePR(prNumber, commitTitle) {
   })
 }
 
+/** List commits on a PR (ascending — last entry is most recent) */
+export async function listPRCommits(prNumber) {
+  return req(`/repos/${GITHUB_REPO}/pulls/${prNumber}/commits?per_page=100`)
+}
+
 /** Delete a branch by ref name */
 export async function deleteBranch(branchName) {
   return req(`/repos/${GITHUB_REPO}/git/refs/heads/${branchName}`, {

@@ -9,5 +9,8 @@ export async function checkBuild(username) {
   const issues = await listIssues(BUILD_LABEL, username)
   if (!issues.length) return null
 
-  return { command: '/clancy:once', issue: issues[0] }
+  // Earliest created = highest priority
+  issues.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  const issue = issues[0]
+  return { command: `/clancy:once --afk #${issue.number}`, issue }
 }

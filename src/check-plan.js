@@ -38,23 +38,28 @@ export async function checkPlan(username) {
   const issues = await listIssues(PLAN_LABEL, username)
   if (!issues.length) return null
 
-  const issue = issues[0]
-  const comments = await listIssueComments(issue.number)
-  const { hasPlan, response } = analyseComments(comments, username)
+  // Earliest created = highest priority
+  issues.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
-  if (!hasPlan) {
-    return { command: '/clancy:plan', issue }
-  }
+  for (const issue of issues) {
+    const comments = await listIssueComments(issue.number)
+    const { hasPlan, response } = analyseComments(comments, username)
 
-  const sentiment = classify(response?.body)
+    if (!hasPlan) {
+      return { command: `/clancy:plan --afk #${issue.number}`, issue }
+    }
 
-  if (sentiment === 'approved') {
-    // /clancy:approve-plan picks the oldest unapproved plan itself
-    return { command: '/clancy:approve-plan', issue }
-  }
+    const sentiment = classify(response?.body)
 
-  if (sentiment === 'feedback') {
-    return { command: '/clancy:plan --fresh', issue }
+    if (sentiment === 'approved') {
+      return { command: `/clancy:approve-plan --afk #${issue.number}`, issue }
+    }
+
+    if (sentiment === 'feedback') {
+      return { command: `/clancy:plan --fresh --afk #${issue.number}`, issue }
+    }
+
+    // Latest comment is Clancy's — skip to next ticket
   }
 
   return null

@@ -6,6 +6,11 @@
   "bin": {
     "ralph-o-bot": "./bin/ralph.js"
   },
+  "files": [
+    "bin",
+    "src",
+    ".env.example"
+  ],
   "dependencies": {
     "dotenv": "^16.0.0"
   }
