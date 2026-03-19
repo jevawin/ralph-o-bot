@@ -1,5 +1,7 @@
 import dotenv from 'dotenv'
+import fs from 'node:fs'
 import path from 'node:path'
+import { execSync } from 'node:child_process'
 
 // Load .clancy/.env from project root (label names, shared with Clancy)
 dotenv.config({ path: path.join(process.cwd(), '.clancy/.env') })
@@ -28,6 +30,29 @@ export const RALPH_MIN_FREE_MEM_MB  = parseInt(process.env.RALPH_MIN_FREE_MEM_MB
 export const RALPH_MAX_LOAD_PER_CORE = parseFloat(process.env.RALPH_MAX_LOAD_PER_CORE || '0.8')
 
 export function validateConfig() {
+  // Check Clancy is installed (.clancy/ directory in project root)
+  const clancyDir = path.join(process.cwd(), '.clancy')
+  if (!fs.existsSync(clancyDir)) {
+    console.error(`Ralph-o-bot: Clancy is not installed in this project.
+
+Run the following to install Clancy:
+  echo "/clancy:init" | claude --dangerously-skip-permissions
+
+Then re-run ralph-o-bot.`)
+    process.exit(1)
+  }
+
+  // Check the claude binary is accessible
+  try {
+    execSync(`which ${CLAUDE_BIN}`, { stdio: 'ignore' })
+  } catch {
+    console.error(`Ralph-o-bot: claude CLI not found at '${CLAUDE_BIN}'.
+
+Install Claude Code: https://docs.anthropic.com/en/docs/claude-code
+Or set CLAUDE_BIN in .env to the correct path.`)
+    process.exit(1)
+  }
+
   const missing = []
   if (!BRIEF_LABEL)  missing.push('CLANCY_BRIEF_LABEL (from .clancy/.env)')
   if (!PLAN_LABEL)   missing.push('CLANCY_PLAN_LABEL (from .clancy/.env)')
