@@ -3,22 +3,31 @@ import { listIssues, listIssueComments } from './github.js'
 import { classify } from './sentiment.js'
 
 const BRIEF_MARKER = '# Clancy Strategic Brief'
+const APPROVED_TICKETS_MARKER = '## Clancy — Approved Tickets'
 
 /**
  * Find most recent Clancy brief comment and any jevawin reply after it.
  */
 function analyseComments(comments, username) {
   let lastBriefIdx = -1
+  let epicApproved = false
 
   for (let i = 0; i < comments.length; i++) {
     if (comments[i].body && comments[i].body.includes(BRIEF_MARKER)) {
       lastBriefIdx = i
     }
+    if (comments[i].body && comments[i].body.includes(APPROVED_TICKETS_MARKER)) {
+      epicApproved = true
+    }
   }
 
   if (lastBriefIdx === -1) {
-    // No brief posted yet
-    return { hasBrief: false, response: null }
+    return { hasBrief: false, epicApproved: false, response: null }
+  }
+
+  if (epicApproved) {
+    // Already decomposed into child tickets — epic stays in brief as anchor, skip it
+    return { hasBrief: true, epicApproved: true, response: null }
   }
 
   // Find most recent jevawin comment AFTER the brief
@@ -29,7 +38,7 @@ function analyseComments(comments, username) {
     }
   }
 
-  return { hasBrief: true, response: lastUserComment }
+  return { hasBrief: true, epicApproved: false, response: lastUserComment }
 }
 
 /**
@@ -45,7 +54,12 @@ export async function checkBrief(username) {
 
   for (const issue of issues) {
     const comments = await listIssueComments(issue.number)
-    const { hasBrief, response } = analyseComments(comments, username)
+    const { hasBrief, epicApproved, response } = analyseComments(comments, username)
+
+    if (epicApproved) {
+      // Child tickets already in flight — epic stays in brief as anchor, skip
+      continue
+    }
 
     if (!hasBrief) {
       return { command: `/clancy:brief --afk #${issue.number}`, issue }
