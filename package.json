@@ -1,0 +1,12 @@
+{
+  "name": "ralph-o-bot",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Automation layer that watches a GitHub Issues board and dispatches Clancy commands",
+  "bin": {
+    "ralph-o-bot": "./bin/ralph.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  }
+}
