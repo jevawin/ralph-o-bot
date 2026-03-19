@@ -42,12 +42,11 @@ export async function checkBrief(username) {
 
   // Highest priority = first in list (GitHub returns most recently updated first)
   const issue = issues[0]
-  const hasAfk = issue.labels.some(l => l.name === 'afk')
   const comments = await listIssueComments(issue.number)
   const { hasBrief, response } = analyseComments(comments, username)
 
   if (!hasBrief) {
-    return { command: hasAfk ? '/clancy:brief --afk' : '/clancy:brief', issue }
+    return { command: '/clancy:brief --afk', issue }
   }
 
   const sentiment = classify(response?.body)
@@ -57,7 +56,7 @@ export async function checkBrief(username) {
   }
 
   if (sentiment === 'feedback') {
-    return { command: hasAfk ? '/clancy:brief --afk' : '/clancy:brief', issue }
+    return { command: '/clancy:brief --afk', issue }
   }
 
   // No actionable response yet
