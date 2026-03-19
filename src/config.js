@@ -1,7 +1,8 @@
 import dotenv from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
-import { execSync } from 'node:child_process'
+import readline from 'node:readline'
+import { execSync, execFileSync } from 'node:child_process'
 
 // Load .clancy/.env from project root (label names, shared with Clancy)
 dotenv.config({ path: path.join(process.cwd(), '.clancy/.env') })
@@ -29,19 +30,12 @@ export const RALPH_RESOURCE_CHECK   = process.env.RALPH_RESOURCE_CHECK !== 'fals
 export const RALPH_MIN_FREE_MEM_MB  = parseInt(process.env.RALPH_MIN_FREE_MEM_MB || '256', 10)
 export const RALPH_MAX_LOAD_PER_CORE = parseFloat(process.env.RALPH_MAX_LOAD_PER_CORE || '0.8')
 
-export function validateConfig() {
-  // Check Clancy is installed (.clancy/ directory in project root)
-  const clancyDir = path.join(process.cwd(), '.clancy')
-  if (!fs.existsSync(clancyDir)) {
-    console.error(`Ralph-o-bot: Clancy is not installed in this project.
+function prompt(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise(resolve => rl.question(question, answer => { rl.close(); resolve(answer) }))
+}
 
-Run the following to install Clancy:
-  echo "/clancy:init" | claude --dangerously-skip-permissions
-
-Then re-run ralph-o-bot.`)
-    process.exit(1)
-  }
-
+export async function validateConfig() {
   // Check the claude binary is accessible
   try {
     execSync(`which ${CLAUDE_BIN}`, { stdio: 'ignore' })
@@ -51,6 +45,22 @@ Then re-run ralph-o-bot.`)
 Install Claude Code: https://docs.anthropic.com/en/docs/claude-code
 Or set CLAUDE_BIN in .env to the correct path.`)
     process.exit(1)
+  }
+
+  // Check Clancy is installed (.clancy/ directory in project root)
+  const clancyDir = path.join(process.cwd(), '.clancy')
+  if (!fs.existsSync(clancyDir)) {
+    const answer = await prompt(
+      'Chief Clancy must be installed for Ralph-o-bot to run. Install Clancy now (npx chief-clancy)? y/n: '
+    )
+    if (answer.trim().toLowerCase() === 'y') {
+      console.log('Installing Clancy...')
+      execFileSync('npx', ['chief-clancy'], { stdio: 'inherit', cwd: process.cwd() })
+      console.log()
+    } else {
+      console.log('Aborted. Run `npx chief-clancy` to install Clancy, then re-run ralph-o-bot.')
+      process.exit(0)
+    }
   }
 
   const missing = []

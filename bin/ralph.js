@@ -35,14 +35,14 @@ Usage:
 
 async function runOnce() {
   const { validateConfig } = await import('../src/config.js')
-  validateConfig()
+  await validateConfig()
   const { dispatch } = await import('../src/dispatch.js')
   await dispatch()
 }
 
 async function startDaemon() {
   const { validateConfig, GITHUB_REPO, RALPH_SLEEP_SECONDS } = await import('../src/config.js')
-  validateConfig()
+  await validateConfig()
 
   const isSystemd = Boolean(process.env.INVOCATION_ID)
   console.log(`Ralph-o-bot v${pkg.version} — at your service.`)
