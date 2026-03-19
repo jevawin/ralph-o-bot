@@ -63,6 +63,15 @@ Or set CLAUDE_BIN in .env to the correct path.`)
     }
   }
 
+  // Check Clancy is initialised (.clancy/.env exists)
+  const clancyEnv = path.join(process.cwd(), '.clancy/.env')
+  if (!fs.existsSync(clancyEnv)) {
+    console.log('Clancy is installed but not initialised for this project. Running /clancy:init...\n')
+    const { runClancy } = await import('./clancy.js')
+    await runClancy('/clancy:init', process.cwd())
+    console.log()
+  }
+
   const missing = []
   if (!BRIEF_LABEL)  missing.push('CLANCY_BRIEF_LABEL (from .clancy/.env)')
   if (!PLAN_LABEL)   missing.push('CLANCY_PLAN_LABEL (from .clancy/.env)')

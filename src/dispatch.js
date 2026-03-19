@@ -34,6 +34,8 @@ export async function dispatch() {
   if (build) {
     log(`Build: issue #${build.issue.number} → ${build.command}`)
     await runClancy(build.command, cwd)
+    log('Build complete — updating docs')
+    await runClancy('/clancy:update-docs', cwd)
     return
   }
 

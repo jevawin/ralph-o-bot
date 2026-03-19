@@ -52,6 +52,9 @@ async function startDaemon() {
   }
   console.log()
 
+  const { runClancy } = await import('../src/clancy.js')
+  await runClancy('/clancy:map-codebase', process.cwd())
+
   const { startDaemon } = await import('../src/scheduler.js')
   await startDaemon()
 }
