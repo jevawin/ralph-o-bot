@@ -159,7 +159,7 @@ export async function checkAndHandleUpdate() {
     return { situation, latestVersion, migration, issueNumber: existing.number }
   }
 
-  const title = `Ralph update available: v${currentVersion} → v${latestVersion}`
+  const title = `Ralph-o-bot update available: v${currentVersion} → v${latestVersion}`
   const body = buildIssueBody(situation, currentVersion, latestVersion, migration)
   const issue = await createIssue(title, body, [label])
   log(`Created issue #${issue.number} (${label})`)
@@ -200,7 +200,7 @@ export async function checkUpdateApproval(username) {
     if (!lastUserComment) continue
     if (lastUserComment.body?.trim().toLowerCase() !== 'approved') continue
 
-    // Parse target version from title: "Ralph update available: vX.Y.Z → vA.B.C"
+    // Parse target version from title: "Ralph-o-bot update available: vX.Y.Z → vA.B.C"
     const match = issue.title.match(/→ v([\d.]+)/)
     if (!match) continue
 
@@ -257,7 +257,7 @@ export async function applyUpdate(latestVersion, migration, pendingIssue) {
   // 5. Create update:complete issue (dedup)
   const existing = await findExistingUpdateIssue('update:complete', latestVersion)
   if (!existing) {
-    const title = `Ralph updated: v${currentVersion} → v${latestVersion}`
+    const title = `Ralph-o-bot updated: v${currentVersion} → v${latestVersion}`
     const body = buildIssueBody('complete', currentVersion, latestVersion, migration)
     const issue = await createIssue(title, body, ['update:complete'])
     log(`Created update:complete issue #${issue.number}`)
