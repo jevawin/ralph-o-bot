@@ -1,10 +1,10 @@
 {
   "name": "ralph-o-bot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Automation layer that watches a GitHub Issues board and dispatches Clancy commands",
   "bin": {
-    "ralph-o-bot": "./bin/ralph.js"
+    "ralph-o-bot": "bin/ralph.js"
   },
   "files": [
     "bin",

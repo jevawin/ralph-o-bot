@@ -3,7 +3,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { CLAUDE_BIN } from './config.js'
 
-const LOG_FILE = path.join(import.meta.dirname, '..', 'logs', 'ralph.log')
+const LOG_FILE = path.join(process.cwd(), 'logs', 'ralph.log')
+fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
 
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}\n`
