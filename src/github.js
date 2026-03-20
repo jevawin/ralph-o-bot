@@ -79,6 +79,28 @@ export async function listPRCommits(prNumber) {
   return req(`/repos/${GITHUB_REPO}/pulls/${prNumber}/commits?per_page=100`)
 }
 
+/** Remove a label from an issue */
+export async function removeLabel(issueNumber, labelName) {
+  return req(`/repos/${GITHUB_REPO}/issues/${issueNumber}/labels/${encodeURIComponent(labelName)}`, {
+    method: 'DELETE'
+  })
+}
+
+export async function addLabel(issueNumber, labelName) {
+  return req(`/repos/${GITHUB_REPO}/issues/${issueNumber}/labels`, {
+    method: 'POST',
+    body: { labels: [labelName] }
+  })
+}
+
+/** Update an issue's body */
+export async function updateIssueBody(issueNumber, body) {
+  return req(`/repos/${GITHUB_REPO}/issues/${issueNumber}`, {
+    method: 'PATCH',
+    body: { body }
+  })
+}
+
 /** Delete a branch by ref name */
 export async function deleteBranch(branchName) {
   return req(`/repos/${GITHUB_REPO}/git/refs/heads/${branchName}`, {

@@ -9,11 +9,11 @@ dotenv.config({ path: path.join(process.cwd(), '.clancy/.env') })
 // Load ralph's own .env (GITHUB_TOKEN, CLAUDE_BIN, scheduler settings)
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
-// Label names — sourced from Clancy's config
-export const BRIEF_LABEL  = process.env.CLANCY_BRIEF_LABEL
-export const PLAN_LABEL   = process.env.CLANCY_PLAN_LABEL
-export const BUILD_LABEL  = process.env.CLANCY_LABEL
-export const REVIEW_LABEL = process.env.CLANCY_STATUS_DONE
+// Label names — read directly from Clancy's env vars, matching Clancy's own defaults
+export const BRIEF_LABEL    = process.env.CLANCY_LABEL_BRIEF ?? 'clancy:brief'
+export const PLAN_LABEL     = process.env.CLANCY_LABEL_PLAN  ?? 'clancy:plan'
+export const BUILD_LABEL    = process.env.CLANCY_LABEL_BUILD ?? 'clancy:build'
+export const NEW_IDEA_LABEL = 'new-idea'
 
 // GitHub
 export const GITHUB_TOKEN = process.env.GITHUB_TOKEN
@@ -73,10 +73,6 @@ Or set CLAUDE_BIN in .env to the correct path.`)
   }
 
   const missing = []
-  if (!BRIEF_LABEL)  missing.push('CLANCY_BRIEF_LABEL (from .clancy/.env)')
-  if (!PLAN_LABEL)   missing.push('CLANCY_PLAN_LABEL (from .clancy/.env)')
-  if (!BUILD_LABEL)  missing.push('CLANCY_LABEL (from .clancy/.env)')
-  if (!REVIEW_LABEL) missing.push('CLANCY_STATUS_DONE (from .clancy/.env)')
   if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN (from .env)')
   if (!GITHUB_REPO)  missing.push('GITHUB_REPO (from .env or .clancy/.env)')
   if (missing.length) {

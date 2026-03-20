@@ -1,49 +1,35 @@
 import { BRIEF_LABEL } from './config.js'
 import { listIssues, listIssueComments } from './github.js'
 import { classify } from './sentiment.js'
+import { appendInstructions } from './instructions.js'
 
 const BRIEF_MARKER = '# Clancy Strategic Brief'
 const APPROVED_TICKETS_MARKER = '## Clancy — Approved Tickets'
 
 /**
- * Find most recent Clancy brief comment and any jevawin reply after it.
+ * Classify the latest comment on an issue:
+ * - 'clancy'   → latest comment is a Clancy brief (wait for user)
+ * - 'approved' → user said "approved"
+ * - 'feedback' → user left other feedback
+ * - 'none'     → no comments yet
  */
-function analyseComments(comments, username) {
-  let lastBriefIdx = -1
-  let epicApproved = false
+function classifyLatest(comments) {
+  if (!comments.length) return 'none'
 
-  for (let i = 0; i < comments.length; i++) {
-    if (comments[i].body && comments[i].body.includes(BRIEF_MARKER)) {
-      lastBriefIdx = i
-    }
-    if (comments[i].body && comments[i].body.includes(APPROVED_TICKETS_MARKER)) {
-      epicApproved = true
-    }
-  }
+  // Epic already decomposed — detected anywhere in comments
+  if (comments.some(c => c.body?.includes(APPROVED_TICKETS_MARKER))) return 'epic'
 
-  if (lastBriefIdx === -1) {
-    return { hasBrief: false, epicApproved: false, response: null }
-  }
-
-  if (epicApproved) {
-    // Already decomposed into child tickets — epic stays in brief as anchor, skip it
-    return { hasBrief: true, epicApproved: true, response: null }
-  }
-
-  // Find most recent jevawin comment AFTER the brief
-  let lastUserComment = null
-  for (let i = lastBriefIdx + 1; i < comments.length; i++) {
-    if (comments[i].user?.login === username) {
-      lastUserComment = comments[i]
-    }
-  }
-
-  return { hasBrief: true, epicApproved: false, response: lastUserComment }
+  const latest = comments[comments.length - 1]
+  if (latest.body?.includes(BRIEF_MARKER)) return 'clancy'
+  if (classify(latest.body) === 'approved') return 'approved'
+  return 'feedback'
 }
 
 /**
- * Check brief-labelled issues and return the Clancy command to run, or null.
- * @param {string} username  GitHub login of the assignee
+ * Check clancy:brief labelled issues for approved/feedback comments.
+ * New ideas are handled upstream by checkNewIdea — by the time an issue
+ * reaches this stage Clancy has already posted a brief.
+ * @param {string} username  GitHub login of the assignee — used to scope issues, not comment detection
  */
 export async function checkBrief(username) {
   const issues = await listIssues(BRIEF_LABEL, username)
@@ -54,28 +40,20 @@ export async function checkBrief(username) {
 
   for (const issue of issues) {
     const comments = await listIssueComments(issue.number)
-    const { hasBrief, epicApproved, response } = analyseComments(comments, username)
+    const state = classifyLatest(comments)
 
-    if (epicApproved) {
-      // Child tickets already in flight — epic stays in brief as anchor, skip
-      continue
-    }
+    if (state === 'epic') continue  // Child tickets already in flight — epic stays as anchor, skip
+    if (state === 'clancy') continue  // Clancy posted — waiting for user
 
-    if (!hasBrief) {
-      return { command: `/clancy:brief --afk #${issue.number}`, issue }
-    }
+    // Append instructions on first pickup (guarded by marker — runs once)
+    await appendInstructions(issue, 'plan')
 
-    const sentiment = classify(response?.body)
-
-    if (sentiment === 'approved') {
+    if (state === 'approved') {
       return { command: `/clancy:approve-brief --afk #${issue.number}`, issue }
     }
 
-    if (sentiment === 'feedback') {
-      return { command: `/clancy:brief --afk #${issue.number}`, issue }
-    }
-
-    // Latest comment is Clancy's — skip to next ticket
+    // 'none' or 'feedback'
+    return { command: `/clancy:brief --afk #${issue.number}`, issue }
   }
 
   return null

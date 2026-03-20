@@ -3,6 +3,7 @@ import { checkReview } from './check-review.js'
 import { checkBuild } from './check-build.js'
 import { checkPlan } from './check-plan.js'
 import { checkBrief } from './check-brief.js'
+import { checkNewIdea } from './check-new-idea.js'
 import { runClancy } from './clancy.js'
 
 function log(msg) {
@@ -52,6 +53,14 @@ export async function dispatch() {
   if (brief) {
     log(`Brief: issue #${brief.issue.number} → ${brief.command}`)
     await runClancy(brief.command, cwd)
+    return
+  }
+
+  // 5. new idea
+  const newIdea = await checkNewIdea(username)
+  if (newIdea) {
+    log(`New idea: issue #${newIdea.issue.number} → ${newIdea.command}`)
+    await runClancy(newIdea.command, cwd)
     return
   }
 

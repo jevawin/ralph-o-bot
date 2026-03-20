@@ -36,6 +36,11 @@ Usage:
 async function runOnce() {
   const { validateConfig } = await import('../src/config.js')
   await validateConfig()
+  try {
+    execSync('git pull --rebase', { stdio: 'inherit', cwd: process.cwd() })
+  } catch {
+    console.warn('Warning: git pull --rebase failed — continuing anyway')
+  }
   const { dispatch } = await import('../src/dispatch.js')
   await dispatch()
 }

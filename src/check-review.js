@@ -33,9 +33,7 @@ export async function checkReview(username) {
 
     if (!lastUserComment) continue  // No jevawin comment yet — still waiting
 
-    const sentiment = classify(lastUserComment.body)
-
-    if (sentiment === 'approved') {
+    if (classify(lastUserComment.body) === 'approved') {
       const commitTitle = `${pr.title} (#${pr.number})`
       await mergePR(pr.number, commitTitle)
       try {
@@ -46,7 +44,7 @@ export async function checkReview(username) {
       return { merged: true, pr, issue }
     }
 
-    // Feedback — only act if no commit has landed since the comment
+    // Anything else — only act if no commit has landed since the comment
     const commits = await listPRCommits(pr.number)
     const lastCommitDate = commits.length
       ? new Date(commits[commits.length - 1].commit.committer.date)
