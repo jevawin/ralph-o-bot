@@ -8,6 +8,10 @@ Named after Ralph Wiggum — Chief Clancy Wiggum's son.
 
 **Design principle: Ralph is the developer. Clancy is the developer's brain.** Ralph observes board/PR state and dispatches the command a developer would run next. It never replicates Clancy's internal logic. If Ralph is tempted to inspect something Clancy already inspects, that's a sign Ralph is doing too much.
 
+## Roadmap
+
+Future ideas and proposals live in `roadmap/` — one file per idea. Each file contains the full proposal including rationale, design decisions, and open questions. When an idea is ready to implement, it becomes a GitHub issue and the roadmap file becomes the brief/plan source of truth.
+
 ## Project Files
 
 | File | Purpose |
