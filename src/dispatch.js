@@ -5,6 +5,7 @@ import { checkPlan } from './check-plan.js'
 import { checkBrief } from './check-brief.js'
 import { checkNewIdea } from './check-new-idea.js'
 import { runClancy } from './clancy.js'
+import { checkUpdateApproval, checkUpdateBlocked, applyUpdate } from './updater.js'
 
 function log(msg) {
   console.log(`[${new Date().toISOString()}] ${msg}`)
@@ -17,6 +18,20 @@ function log(msg) {
 export async function dispatch() {
   const username = await getCurrentUser()
   const cwd = process.cwd()
+
+  // 0a. Apply any approved update:pending
+  const updateApproval = await checkUpdateApproval(username)
+  if (updateApproval) {
+    log(`Update:pending approved — applying v${updateApproval.latestVersion}`)
+    await applyUpdate(updateApproval.latestVersion, updateApproval.migration, updateApproval.issue)
+    return
+  }
+
+  // 0b. Pause dispatch if update:pending or update:action-required is open
+  if (await checkUpdateBlocked()) {
+    log('Dispatch paused — update pending or action required.')
+    return
+  }
 
   // 1. review
   const review = await checkReview(username)

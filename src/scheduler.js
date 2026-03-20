@@ -6,7 +6,8 @@ import {
   RALPH_QUIET_END,
   RALPH_RESOURCE_CHECK,
   RALPH_MIN_FREE_MEM_MB,
-  RALPH_MAX_LOAD_PER_CORE
+  RALPH_MAX_LOAD_PER_CORE,
+  RALPH_UPDATE_CHECK_INTERVAL_HOURS,
 } from './config.js'
 
 function log(msg) {
@@ -78,9 +79,27 @@ function resourcesOk() {
   return true
 }
 
-export async function startDaemon() {
+export async function startDaemon({ autoUpdate = false } = {}) {
+  // 0 = check immediately on first tick; Infinity = never check
+  let lastUpdateCheck = autoUpdate ? 0 : Infinity
+
   while (true) {
     await waitForQuietHoursEnd()
+
+    // Periodic update check (only when --auto-update is active)
+    if (autoUpdate) {
+      const now = Date.now()
+      const intervalMs = RALPH_UPDATE_CHECK_INTERVAL_HOURS * 3600 * 1000
+      if (now - lastUpdateCheck >= intervalMs) {
+        try {
+          const { checkAndHandleUpdate } = await import('./updater.js')
+          await checkAndHandleUpdate()
+        } catch (err) {
+          log(`Update check error: ${err.message}`)
+        }
+        lastUpdateCheck = Date.now()
+      }
+    }
 
     if (resourcesOk()) {
       try {

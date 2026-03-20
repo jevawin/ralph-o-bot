@@ -8,7 +8,9 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const pkg = require('../package.json')
 
-const [,, subcommand] = process.argv
+const args = process.argv.slice(2)
+const [subcommand] = args
+const autoUpdate = args.includes('--auto-update')
 
 async function main() {
   switch (subcommand) {
@@ -21,13 +23,20 @@ async function main() {
     case 'boot':
       await boot()
       break
+    case 'update':
+      await runUpdate()
+      break
     default:
       console.log(`ralph-o-bot v${pkg.version}
 
 Usage:
-  ralph-o-bot run    Single dispatch tick, then exit
-  ralph-o-bot start  Start the daemon (run → sleep → run loop)
-  ralph-o-bot boot   Install and start as a systemd service
+  ralph-o-bot run              Single dispatch tick, then exit
+  ralph-o-bot start            Start the daemon (run → sleep → run loop)
+  ralph-o-bot start --auto-update  Start daemon with automatic update checks
+  ralph-o-bot boot             Install and start as a systemd service
+  ralph-o-bot boot --auto-update   Install service with automatic update checks
+  ralph-o-bot update           Check for updates, show plan, prompt to apply
+  ralph-o-bot update -y        Check for updates and apply without prompting
 `)
       process.exit(1)
   }
@@ -52,6 +61,7 @@ async function startDaemon() {
   const isSystemd = Boolean(process.env.INVOCATION_ID)
   console.log(`Ralph-o-bot v${pkg.version} — at your service.`)
   console.log(`Watching ${GITHUB_REPO} every ${RALPH_SLEEP_SECONDS}s. Ctrl+C to stop.`)
+  if (autoUpdate) console.log('Auto-update: enabled.')
   if (!isSystemd) {
     console.log(`\nTip: run 'ralph-o-bot boot' to install as a system service that starts on boot.`)
   }
@@ -60,8 +70,16 @@ async function startDaemon() {
   const { runClancy } = await import('../src/clancy.js')
   await runClancy('/clancy:map-codebase', process.cwd())
 
-  const { startDaemon } = await import('../src/scheduler.js')
-  await startDaemon()
+  const { startDaemon: runDaemon } = await import('../src/scheduler.js')
+  await runDaemon({ autoUpdate })
+}
+
+async function runUpdate() {
+  const { validateConfig } = await import('../src/config.js')
+  await validateConfig()
+  const skipConfirm = args.includes('-y')
+  const { applyUpdateInteractive } = await import('../src/updater.js')
+  await applyUpdateInteractive({ skipConfirm })
 }
 
 async function boot() {
@@ -108,6 +126,7 @@ Re-run with sudo: 'sudo ralph-o-bot boot'`)
   ])].filter(Boolean)
   const envPath = `Environment="PATH=${binDirs.join(':')}"`
 
+  const startArgs = autoUpdate ? 'start --auto-update' : 'start'
   const unit = `[Unit]
 Description=Ralph-o-bot — Clancy automation runner
 After=network.target
@@ -116,9 +135,9 @@ After=network.target
 Type=simple
 User=${user}
 WorkingDirectory=${cwd}
-ExecStart=${ralphBin} start
+ExecStart=${ralphBin} ${startArgs}
 ${envPath}
-Restart=on-failure
+Restart=always
 RestartSec=10
 
 [Install]

@@ -108,6 +108,28 @@ export async function deleteBranch(branchName) {
   })
 }
 
+/** Create a new issue */
+export async function createIssue(title, body, labels = []) {
+  return req(`/repos/${GITHUB_REPO}/issues`, {
+    method: 'POST',
+    body: { title, body, labels }
+  })
+}
+
+/** Close an issue */
+export async function closeIssue(issueNumber) {
+  return req(`/repos/${GITHUB_REPO}/issues/${issueNumber}`, {
+    method: 'PATCH',
+    body: { state: 'closed' }
+  })
+}
+
+/** List open issues by label (no assignee filter) */
+export async function listIssuesByLabel(label) {
+  const params = new URLSearchParams({ state: 'open', labels: label, per_page: '100' })
+  return req(`/repos/${GITHUB_REPO}/issues?${params}`)
+}
+
 /**
  * Find the open PR linked to a given issue.
  * GitHub doesn't have a direct API for this — we look at open PRs and check

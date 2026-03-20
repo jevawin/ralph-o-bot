@@ -9,8 +9,10 @@
   "files": [
     "bin",
     "src",
+    "migration.json",
     ".env.example"
   ],
+  "clancyVersion": "latest",
   "dependencies": {
     "dotenv": "^16.0.0"
   }

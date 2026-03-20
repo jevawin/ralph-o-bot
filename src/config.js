@@ -46,6 +46,10 @@ function resolveClaude() {
   return 'claude' // last resort — rely on PATH
 }
 
+// Auto-update
+export const RALPH_UPDATE_CHECK_INTERVAL_HOURS = parseFloat(process.env.RALPH_UPDATE_CHECK_INTERVAL_HOURS || '24')
+export const RALPH_MOCK_LATEST_VERSION         = process.env.RALPH_MOCK_LATEST_VERSION || null
+
 // Scheduler
 export const RALPH_SLEEP_SECONDS    = parseInt(process.env.RALPH_SLEEP_SECONDS || '30', 10)
 export const RALPH_QUIET_START      = process.env.RALPH_QUIET_START || '00:00'
