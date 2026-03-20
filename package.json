@@ -1,6 +1,6 @@
 {
   "name": "ralph-o-bot",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "Automation layer that watches a GitHub Issues board and dispatches Clancy commands",
   "bin": {
@@ -9,8 +9,8 @@
   "files": [
     "bin",
     "src",
-    "migration.json",
-    ".env.example"
+    ".env.example",
+    "migration.json"
   ],
   "clancyVersion": "latest",
   "dependencies": {

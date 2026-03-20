@@ -1,7 +1,9 @@
 {
-  "version": "0.2.1",
-  "notes": "Initial release.",
-  "boardChanges": [],
+  "version": "0.3.0",
+  "notes": "Phase 3 test — validates the full pending approval flow.",
+  "boardChanges": [
+    { "type": "labelRename", "from": "test-old-label", "to": "test-new-label" }
+  ],
   "requiresBoot": false,
   "requiresManual": false
 }
