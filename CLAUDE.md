@@ -16,21 +16,21 @@ Future ideas and proposals live in `roadmap/` — one file per idea. Each file c
 
 | File | Purpose |
 |------|---------|
-| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot` |
+| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `update` |
 | `src/config.js` | Loads `.clancy/.env` + `.env`, exports label names and settings |
-| `src/dispatch.js` | Priority chain: review → build → plan → brief. One action per tick. |
-| `src/scheduler.js` | Sleep-loop daemon, quiet hours, resource check |
+| `src/dispatch.js` | Priority chain: update → review → build → plan → brief. One action per tick. |
+| `src/scheduler.js` | Sleep-loop daemon, quiet hours, resource check, periodic update check |
 | `src/github.js` | GitHub REST API wrapper (native fetch, no library) |
 | `src/clancy.js` | Shells out to `claude --dangerously-skip-permissions` with a command |
-| `src/state.js` | Read/write `.state.json` — seen-comments cursor per issue/PR |
+| `src/updater.js` | Auto-update: registry check, situation classification, issue creation, migration, install, restart |
 | `src/check-review.js` | PR comment logic → merge or re-run Clancy |
 | `src/check-build.js` | Build-label detection → `/clancy:once` |
 | `src/check-plan.js` | Plan-label issue comment logic → `/clancy:plan` variants |
 | `src/check-brief.js` | Brief-label issue comment logic → `/clancy:brief` variants |
 | `src/sentiment.js` | Keyword classifier — `approved` / `feedback` / `none` |
+| `migration.json` | Per-release migration descriptor — shipped in the npm package |
 | `.env` | gitignored — `GITHUB_TOKEN`, `GITHUB_REPO`, `CLAUDE_BIN`, scheduler settings |
-| `.state.json` | gitignored — last actioned comment ID per issue/PR number |
-| `logs/ralph.log` | Clancy stdout/stderr output |
+| `logs/ralph.log` | Clancy stdout/stderr output — written to `process.cwd()/logs/` (project root) |
 
 ## Kanban Flow
 
@@ -159,9 +159,32 @@ RALPH_MAX_LOAD_PER_CORE=0.8
 |---------|-------------|
 | `ralph-o-bot run` | Single dispatch tick, then exit — main dev tool |
 | `ralph-o-bot start` | Daemon: run → sleep → run indefinitely |
+| `ralph-o-bot start --auto-update` | Daemon with automatic npm update checks every `RALPH_UPDATE_CHECK_INTERVAL_HOURS` |
 | `ralph-o-bot boot` | Install as systemd service (requires global install + root) |
+| `ralph-o-bot boot --auto-update` | Install service with automatic update checks enabled |
+| `ralph-o-bot update` | Check for updates, show migration plan, prompt to apply |
+| `ralph-o-bot update -y` | Same but skips the confirmation prompt |
 
 `ralph-o-bot run` is the primary tool for testing — single tick, inspectable output.
+
+## Publishing to npm
+
+**Mac is the canonical publish machine** — always `git pull` before bumping versions.
+
+Checklist for each release:
+1. `git pull origin main`
+2. Bump `version` in `package.json`
+3. Bump `version` in `migration.json` to match — and update `notes`, `boardChanges`, etc. as needed
+4. `npm publish --access public`
+
+**`migration.json` field rules:**
+- `boardChanges` present → `update:pending` (user must approve before install)
+- `requiresManual: true` or `requiresBoot: true` → `update:action-required` (manual steps needed)
+- Major semver bump → always `update:action-required` regardless of manifest
+- Empty `boardChanges`, no flags, patch/minor → `update:complete` (installs automatically)
+
+**Testing updates locally (Phase 1 — no npm publish needed):**
+Add `RALPH_MOCK_LATEST_VERSION=2.0.0` to `clumeral-game/.env`, restart the service, and watch logs. Remove and restart when done.
 
 ## Daemon (scheduler.js)
 
