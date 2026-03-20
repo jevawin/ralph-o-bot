@@ -1,9 +1,7 @@
 {
-  "version": "0.3.1",
-  "notes": "Phase 3 test — validates the full pending approval flow.",
-  "boardChanges": [
-    { "type": "labelRename", "from": "test-old-label", "to": "test-new-label" }
-  ],
+  "version": "0.3.2",
+  "notes": "Test update — no Claude session required. Approve this update via the GitHub issue to confirm the manual approval flow works end-to-end.",
+  "boardChanges": [],
   "requiresBoot": false,
-  "requiresManual": false
+  "requiresManual": true
 }
