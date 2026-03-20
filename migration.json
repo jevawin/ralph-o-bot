@@ -1,5 +1,5 @@
 {
-  "version": "0.3.2",
+  "version": "0.3.3",
   "notes": "Test update — no Claude session required. Approve this update via the GitHub issue to confirm the manual approval flow works end-to-end.",
   "boardChanges": [],
   "requiresBoot": false,

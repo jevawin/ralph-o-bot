@@ -1,5 +1,7 @@
 # Ralph-o-bot
 
+> **Pre-alpha — active development and testing.** Expect breaking changes, rough edges, and incomplete features. Not recommended for production use yet.
+
 Automation layer for [Chief Clancy](https://github.com/Pushedskydiver/clancy). Watches a GitHub Issues board and dispatches Clancy commands based on ticket state — so you can approve work from GitHub comments and let the pipeline run itself.
 
 Named after Ralph Wiggum — Chief Clancy Wiggum's son.
