@@ -138,7 +138,7 @@ Two `.env` files loaded at startup via `dotenv`:
 ```
 GITHUB_TOKEN=...
 GITHUB_REPO=jevawin/clumeral-game
-CLAUDE_BIN=/usr/local/bin/claude
+CLAUDE_BIN=/custom/path/claude  # optional — only needed if auto-discovery fails
 
 RALPH_SLEEP_SECONDS=30
 RALPH_QUIET_START=00:00    # 00:00 = disabled
@@ -170,6 +170,10 @@ Resource check uses Node's `os` module — `os.freemem()` + `os.loadavg()`. On W
 ## Systemd Service (`ralph-o-bot boot`)
 
 Writes to `/etc/systemd/system/ralph-o-bot.service`. `WorkingDirectory` = project root at boot time. Requires global install and root. `INVOCATION_ID` env var (set by systemd) suppresses the startup tip.
+
+**PATH embedding:** systemd runs with a minimal PATH that won't include nvm directories or `~/.local/bin`. `boot()` resolves this at install time by capturing the bin directories of `ralph-o-bot` (via `which ralph-o-bot`) and `node` (via `process.execPath`) and embedding them as an `Environment="PATH=..."` line in the unit file. This means the service file is machine-specific by design — it encodes the correct paths for whoever ran `boot`. Never hardcode paths in the template; always derive them at `boot()` time so the fix works for any user regardless of how they installed Node or Claude.
+
+**Claude binary resolution:** `config.js` auto-discovers the `claude` CLI by checking common install locations (`~/.local/bin`, all nvm-versioned paths under `~/.nvm/versions/node/`, `/usr/local/bin`, `/opt/homebrew/bin`) before falling back to bare `claude`. `CLAUDE_BIN` in `.env` is an override for non-standard installs, not a requirement. Do not change this to a simple `which claude` — that fails under systemd for the same PATH reason above.
 
 ## Key Decisions
 

@@ -75,7 +75,15 @@ RALPH_QUIET_END=00:00        # quiet hours end   — 00:00 disables (default: 00
 RALPH_RESOURCE_CHECK=true    # skip tick if memory/CPU is under pressure (default: true)
 RALPH_MIN_FREE_MEM_MB=256    # minimum free memory in MB (default: 256)
 RALPH_MAX_LOAD_PER_CORE=0.8  # maximum load average per CPU core (default: 0.8)
-CLAUDE_BIN=claude            # path to claude binary if not in PATH (default: claude)
+```
+
+### Claude binary
+
+Ralph auto-discovers the `claude` CLI by checking common install locations (`~/.local/bin`, nvm paths, `/usr/local/bin`, Homebrew). You only need to set `CLAUDE_BIN` if your install is somewhere non-standard:
+
+```bash
+# .env
+CLAUDE_BIN=/custom/path/to/claude
 ```
 
 ## Issue labels

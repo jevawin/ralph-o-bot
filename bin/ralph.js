@@ -99,6 +99,15 @@ Re-run with sudo: 'sudo ralph-o-bot boot'`)
   const cwd = process.cwd()
   const unitFile = `/etc/systemd/system/ralph-o-bot.service`
 
+  // Collect the bin dirs that contain our key binaries so the service can find
+  // them even though systemd runs with a minimal PATH. Dedup, filter empties.
+  const binDirs = [...new Set([
+    path.dirname(ralphBin),               // wherever ralph-o-bot lives (nvm, /usr/local, etc.)
+    path.dirname(process.execPath),        // the node that is running right now
+    '/usr/local/bin', '/usr/bin', '/bin',  // baseline system paths
+  ])].filter(Boolean)
+  const envPath = `Environment="PATH=${binDirs.join(':')}"`
+
   const unit = `[Unit]
 Description=Ralph-o-bot — Clancy automation runner
 After=network.target
@@ -108,6 +117,7 @@ Type=simple
 User=${user}
 WorkingDirectory=${cwd}
 ExecStart=${ralphBin} start
+${envPath}
 Restart=on-failure
 RestartSec=10
 

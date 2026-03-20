@@ -19,8 +19,32 @@ export const NEW_IDEA_LABEL = 'new-idea'
 export const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 export const GITHUB_REPO  = process.env.GITHUB_REPO   // e.g. "jevawin/clumeral-game"
 
-// Clancy runner
-export const CLAUDE_BIN   = process.env.CLAUDE_BIN || 'claude'
+// Clancy runner — resolve claude binary
+export const CLAUDE_BIN = process.env.CLAUDE_BIN || resolveClaude()
+
+function resolveClaude() {
+  const home = process.env.HOME || ''
+  const candidates = [
+    path.join(home, '.local/bin/claude'),                    // Linux pip/deb
+    path.join(home, '.nvm/versions/node/current/bin/claude'), // nvm (current)
+    '/usr/local/bin/claude',                                 // system-wide
+    '/opt/homebrew/bin/claude',                              // macOS Homebrew
+  ]
+
+  // Also glob nvm versioned paths (e.g. ~/.nvm/versions/node/v24.x.x/bin/claude)
+  const nvmBase = path.join(home, '.nvm/versions/node')
+  if (fs.existsSync(nvmBase)) {
+    for (const v of fs.readdirSync(nvmBase)) {
+      candidates.push(path.join(nvmBase, v, 'bin/claude'))
+    }
+  }
+
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
+  }
+
+  return 'claude' // last resort — rely on PATH
+}
 
 // Scheduler
 export const RALPH_SLEEP_SECONDS    = parseInt(process.env.RALPH_SLEEP_SECONDS || '30', 10)
