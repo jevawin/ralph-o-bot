@@ -1,6 +1,6 @@
 # Auto-Update
 
-**Status:** Backlog
+**Status:** Backlog — ready to build
 
 Ralph should be able to update itself and its pinned Clancy version without manual intervention, notify the user of what changed, and handle board migrations mechanically where possible.
 
@@ -16,71 +16,82 @@ This means Clancy and Ralph are always in lockstep. There is no separate "check 
 
 This also means one human (the Ralph maintainer) generates the migration manifest with Claude, and every ralph-o-bot instance in the world benefits — no per-instance AI runs needed for updates.
 
-## --auto-update Flag
+## `--auto-update` Flag
 
 Added to `boot` and `start` commands. When active:
 
-- Checks npm registry for a newer Ralph version on startup and every 24h (configurable via `RALPH_UPDATE_CHECK_INTERVAL_HOURS`, default 24)
+- Checks npm registry for a newer Ralph version on startup and every N hours (configurable via `RALPH_UPDATE_CHECK_INTERVAL_HOURS`, default `24`)
 - Not checked on every tick — avoids unnecessary network calls
 - Version comparison uses semver to determine the situation (see below)
+
+## `ralph-o-bot update` Command
+
+Manual update command for use in Situation 3 recovery, scripting, or when the user wants to update outside the daemon cycle.
+
+```
+ralph-o-bot update      # shows what will change, asks y/n before proceeding
+ralph-o-bot update -y   # auto-confirms, no prompt
+```
+
+Output before confirmation mirrors the GitHub issue body exactly — version, changelog summary, concrete board changes, anything breaking called out. What you confirm is what gets posted.
+
+The daemon never calls `ralph-o-bot update` internally — it runs the same underlying update function directly. `-y` is for humans scripting or skipping the prompt in a known-safe context, following standard Unix convention (cf. `apt-get -y`, `npm publish`).
 
 ## Three Situations
 
 ### 1. `update:complete` — nothing required
 
-**Trigger:** patch or minor bump with no board-affecting changes (no `migration.json` workflow changes)
+**Trigger:** patch or minor bump with no board-affecting changes (no `boardChanges` in `migration.json`)
 
 **What Ralph does:**
 1. Runs `npm install -g ralph-o-bot@latest` then `npx chief-clancy@<clancyVersion>`
 2. Restarts (see Restart Mechanism below)
-3. Creates a GitHub issue labelled `update:complete` with the version number and changelog summary
+3. Creates a GitHub issue labelled `update:complete` with version number, changelog summary, and any new features worth knowing about
 
-**User action:** Read it, use new features if you want, close when done. Ralph ignores `update:*` issues in dispatch so they never enter the pipeline.
+**User action:** Read it, use new features if you want, close when done. Ralph ignores all `update:*` issues in dispatch so they never enter the pipeline.
 
-**Deduplication:** Ralph checks for an existing open `update:complete` issue for the same version before creating one, to avoid spam if the check fires multiple times.
+**Deduplication:** Ralph checks for an existing open `update:complete` issue for the same version before creating one — no spam if the check fires multiple times before the user closes it.
 
 ---
 
 ### 2. `update:pending` — approval required
 
-**Trigger:** patch or minor bump where `migration.json` includes board-affecting changes (label renames, new required `.env` defaults, etc.)
+**Trigger:** patch or minor bump where `migration.json` includes `boardChanges` (label renames, new `.env` defaults)
 
 **What Ralph does:**
 1. Does NOT update yet
 2. Inspects current board state and generates a concrete migration plan — e.g. "4 open issues currently labelled `clancy:brief` will be relabelled `clancy:review`"
-3. Creates a GitHub issue labelled `update:pending` with the version, changelog, and migration plan
-4. **Pauses dispatch** until the issue is resolved — continuing to build on old conventions while a migration is pending would leave the board in an inconsistent state
+3. Creates a GitHub issue labelled `update:pending` with version, changelog, and the specific migration plan
+4. **Pauses dispatch** — no ticket work while a migration is pending; building on old conventions mid-migration leaves the board inconsistent
 
 **User action:** Read the migration plan. Reply `approved` to the issue. Ralph then:
-1. Applies the `migration.json` changes (relabels issues, writes new `.env` defaults)
+1. Applies `migration.json` changes (relabels issues, writes new `.env` defaults)
 2. Installs the update and restarts
 3. Closes the `update:pending` issue and opens an `update:complete` one
-
-**Scope of mechanical migration:**
-Ralph only handles what `migration.json` can enumerate — label renames, `.env` new keys with defaults, systemd unit regeneration. Changes that require interpreting ticket context (e.g. restructuring in-flight brief/plan cycles) fall to Situation 3.
 
 ---
 
 ### 3. `update:action-required` — manual intervention
 
-**Trigger:** major semver bump, or any update where `migration.json` flags changes Ralph cannot apply mechanically (e.g. changes to in-flight ticket structure, new required `.env` variables with no sensible default, systemd unit changes requiring `sudo ralph-o-bot boot` rerun)
+**Trigger:** major semver bump, or `migration.json` has `requiresManual: true` (changes Ralph cannot apply mechanically — e.g. new required `.env` variables with no sensible default, systemd unit changes requiring `sudo ralph-o-bot boot`)
 
 **What Ralph does:**
 1. Does NOT update
-2. Creates a GitHub issue labelled `update:action-required` with as specific instructions as possible — e.g. "Add `RALPH_NEW_VAR=...` to `.env`, then run `sudo ralph-o-bot boot` to regenerate the service file, then run `ralph-o-bot update`"
+2. Creates a GitHub issue labelled `update:action-required` with specific instructions — e.g. "Add `RALPH_NEW_VAR=...` to `.env`, then run `sudo ralph-o-bot boot`, then run `ralph-o-bot update`"
 3. **Pauses dispatch**
 
-**User action:** Log in, follow the instructions, close the issue. Ralph resumes on next tick once no `update:action-required` issues are open.
+**User action:** Log in, follow the instructions, run `ralph-o-bot update` when ready, close the issue. Dispatch resumes on next tick once no `update:action-required` issues are open.
 
 ---
 
 ## migration.json
 
-Shipped inside the ralph-o-bot npm package with each release. Describes everything Ralph needs to do when applying this version. Generated by the maintainer with Claude's help — one Claude run, benefits all instances.
+Shipped inside the ralph-o-bot npm package with each release. Describes everything Ralph needs to do when applying this version. Generated by the maintainer with Claude — one run, all instances benefit.
 
 ```json
 {
   "version": "1.2.0",
+  "notes": "Human-readable summary for the update issue body — new features, what changed, why",
   "boardChanges": [
     { "type": "labelRename", "from": "clancy:brief", "to": "clancy:review" }
   ],
@@ -88,24 +99,71 @@ Shipped inside the ralph-o-bot npm package with each release. Describes everythi
     { "key": "RALPH_UPDATE_CHECK_INTERVAL_HOURS", "default": "24" }
   ],
   "requiresBoot": false,
-  "requiresManual": false,
-  "notes": "Human-readable summary for the update issue body"
+  "requiresManual": false
 }
 ```
 
-`requiresManual: true` forces Situation 3 regardless of semver. `boardChanges` present forces at minimum Situation 2.
+**Field rules:**
+- `boardChanges` present → at minimum Situation 2
+- `requiresManual: true` → forces Situation 3 regardless of semver
+- `requiresBoot: true` → Situation 3; instructions tell user to rerun `sudo ralph-o-bot boot`
+- Major semver bump → Situation 3 regardless of manifest content
+- Empty `boardChanges` + no flags + patch/minor → Situation 1
+
+**Supported `boardChanges` types:**
+- `labelRename` — relabels all open issues matching `from` to `to`
+
+More types can be added as needed. Anything not enumerable here stays out of scope and becomes `requiresManual: true`.
 
 ## Restart Mechanism
 
 After `npm install -g ralph-o-bot@latest`:
 
-- **Under systemd:** Ralph detects `INVOCATION_ID` in env and exits cleanly — service file should use `Restart=always` (set during `boot`) so systemd brings up the new binary automatically
-- **Manual `start`:** Ralph re-execs itself via a small wrapper — `execFile` the new binary with the same args, replacing the current process
-
-`boot` should be updated to write `Restart=always` instead of `Restart=on-failure` to support this.
+- **Under systemd:** Ralph detects `INVOCATION_ID` in env and exits with code `0` — `boot` writes `Restart=always` (not `Restart=on-failure`) so systemd brings up the new binary automatically. `boot` should be updated to write this.
+- **Manual `start`:** Ralph re-execs itself — `execFile` the new binary with the same args, replacing the current process
 
 ## Dispatch Guard
 
 `dispatch.js` filters out any issue whose labels include `update:complete`, `update:pending`, or `update:action-required` before the priority chain runs.
 
-Any open `update:pending` or `update:action-required` issue causes `dispatch()` to return early with a log line — no ticket work while a migration is unresolved.
+Any open `update:pending` or `update:action-required` issue causes `dispatch()` to return early with a log line — no ticket work until resolved.
+
+## Test Plan
+
+Build and validate in layers, each de-risking the next.
+
+### Phase 1 — local logic test
+
+Build the update function with a `RALPH_MOCK_LATEST_VERSION` env var that bypasses the npm registry check and pretends a given version is available. Run ralph-o-bot locally, set the mock version to something higher than current, confirm:
+- Correct situation is selected
+- GitHub issue is created with right label and content
+- Dispatch is paused where expected
+- `ralph-o-bot update` output matches issue body
+
+No npm publish needed. Fast to iterate.
+
+### Phase 2 — local npm test
+
+Once logic is solid:
+1. Deploy current build to npm as e.g. `v0.2.0`
+2. Remove the local dev version, install from npm (`npm install -g ralph-o-bot`)
+3. Run ralph-o-bot — confirm it starts correctly from the npm-installed binary
+4. Temporarily lower `RALPH_UPDATE_CHECK_INTERVAL_HOURS` to speed up the check cycle
+
+### Phase 3 — remote npm test (VS Code on Mac)
+
+1. From Mac (VS Code), publish a new fake version bump to npm (e.g. `v0.2.1`) with a `migration.json` and updated `notes`
+2. Wait for the Pi's ralph-o-bot to detect it within the (shortened) check interval
+3. Confirm GitHub issue appears with correct label and content
+4. Confirm binary updated and restarted correctly (check version via logs or `ralph-o-bot --version`)
+
+This validates the full npm update path without any local involvement from the Pi.
+
+### Phase 4 — genuine Clancy update
+
+Once Phase 3 passes:
+1. Make real code changes (Clancy version bump + any ralph-o-bot changes needed)
+2. Author `migration.json` with Claude
+3. Publish to npm
+4. Let ralph-o-bot pick it up naturally
+5. Verify end-to-end: detection → situation classification → issue → migration (if any) → install → restart → board correct
