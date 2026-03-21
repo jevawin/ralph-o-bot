@@ -1,10 +1,9 @@
 {
-  "version": "0.4.3",
+  "version": "0.4.4",
   "clancyVersion": "0.8.7",
-  "notes": "Fix Clancy version detection, restart prompt after update, default update to y.",
-  "breaking": [],
-  "features": ["ralph-o-bot update now prompts to restart after applying (defaults to y)."],
-  "fixes": ["Clancy actual version now correctly read from .clancy/version.json.", "Update confirmation prompt now defaults to y."],
+  "notes": "PR review instructions prompt.",
+  "features": ["Ralph now posts a one-time comment on each PR when it first enters review, reminding you to reply `approved` to merge or `rework: your feedback` to request changes."],
+  "fixes": [],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
