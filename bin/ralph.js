@@ -99,7 +99,6 @@ async function reinstallClancy() {
   const clancyVersion = pkg.clancyVersion || 'latest'
   console.log(`Installing chief-clancy@${clancyVersion}...`)
   execFileSync('npx', [`chief-clancy@${clancyVersion}`], { stdio: 'inherit', cwd: process.cwd() })
-  fs.writeFileSync(path.join(process.cwd(), '.clancy/.ralph-clancy-version'), clancyVersion, 'utf8')
   console.log('Done.')
 }
 

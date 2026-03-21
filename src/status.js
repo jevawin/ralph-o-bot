@@ -150,7 +150,8 @@ export async function printStatus() {
   const desiredClancy = pkg.clancyVersion || 'unknown'
   let actualClancy = null
   try {
-    actualClancy = fs.readFileSync(path.join(process.cwd(), '.clancy/.ralph-clancy-version'), 'utf8').trim()
+    const versionJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.clancy/version.json'), 'utf8'))
+    actualClancy = versionJson.version
   } catch {}
 
   const clancyMismatch = desiredClancy !== 'latest' && actualClancy && actualClancy !== desiredClancy

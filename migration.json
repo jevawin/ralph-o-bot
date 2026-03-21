@@ -1,10 +1,10 @@
 {
-  "version": "0.4.2",
+  "version": "0.4.3",
   "clancyVersion": "0.8.7",
-  "notes": "Fix Clancy version display, pin Clancy to 0.8.7, started/restarted status headers.",
+  "notes": "Fix Clancy version detection, restart prompt after update, default update to y.",
   "breaking": [],
-  "features": ["Status now shows started/restarted header when running ralph-o-bot start or restart."],
-  "fixes": ["Clancy actual version now correctly detected (stored after install, not from node_modules).", "Clancy pinned to exact version 0.8.7 instead of latest."],
+  "features": ["ralph-o-bot update now prompts to restart after applying (defaults to y)."],
+  "fixes": ["Clancy actual version now correctly read from .clancy/version.json.", "Update confirmation prompt now defaults to y."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false

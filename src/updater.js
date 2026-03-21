@@ -396,7 +396,7 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
   console.log()
 
   if (!skipConfirm) {
-    const go = await promptYN('Proceed with update? [y/N] ')
+    const go = await promptYN('Proceed with update? [Y/n] ', true)
     if (!go) {
       console.log('Aborted.')
       return
@@ -407,20 +407,24 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
   console.log('Update complete.')
   if (migration.requiresBoot) {
     console.log('The service definition has changed — re-run boot to apply it:')
-    console.log(`  ralph-o-bot boot`)
+    console.log(`  sudo ralph-o-bot boot`)
   } else {
-    console.log('Run `ralph-o-bot restart` to restart Ralph-o-bot.')
+    const doRestart = skipConfirm || await promptYN('Restart Ralph-o-bot now? [Y/n] ', true)
+    if (doRestart) {
+      restart()
+    }
   }
 }
 
 // --- Internal helpers -------------------------------------------------------
 
-function promptYN(question) {
+function promptYN(question, defaultYes = false) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => {
     rl.question(question, answer => {
       rl.close()
-      resolve(answer.trim().toLowerCase() === 'y')
+      const trimmed = answer.trim().toLowerCase()
+      resolve(trimmed === '' ? defaultYes : trimmed === 'y')
     })
   })
 }
