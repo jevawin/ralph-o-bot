@@ -1,6 +1,7 @@
 # Test Suite
 
-**Status:** Backlog
+**Status:** Backlog — priority #2
+**Depends on:** phase-pipeline-refactor (dispatch stages need to be split before they're testable in isolation; sentiment.js and scheduler.js can be tested now)
 
 Add a unit test suite for Ralph's core logic modules — dispatch stages, sentiment classifier, scheduler conditions, and env validation.
 

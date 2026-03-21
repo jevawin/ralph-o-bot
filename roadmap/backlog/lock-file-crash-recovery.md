@@ -1,6 +1,6 @@
 # Lock File & Crash Recovery
 
-**Status:** Backlog
+**Status:** Backlog — priority #4 (independent, no dependencies)
 
 Add a lock file to Ralph's dispatch loop that prevents overlapping runs and enables crash detection/recovery when Ralph dies mid-Clancy-invocation.
 

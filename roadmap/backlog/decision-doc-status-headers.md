@@ -1,6 +1,6 @@
 # Decision Doc Status Headers
 
-**Status:** Backlog — quick win, do alongside next roadmap item
+**Status:** Backlog — housekeeping, do opportunistically not as a dedicated piece of work
 
 Add a `**Status:**` header to all roadmap files so it's clear where each idea sits in its lifecycle.
 
