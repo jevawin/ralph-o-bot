@@ -68,7 +68,7 @@ async function startDaemon() {
   console.log()
 
   const { runClancy } = await import('../src/clancy.js')
-  await runClancy('/clancy:map-codebase', process.cwd())
+  await runClancy('/clancy:update-docs', process.cwd())
 
   const { startDaemon: runDaemon } = await import('../src/scheduler.js')
   await runDaemon({ autoUpdate })
