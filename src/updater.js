@@ -399,7 +399,7 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
   }
 
   await applyUpdate(latestVersion, migration, null, { restart: false })
-  console.log('Update complete.')
+  console.log('Update complete. Run `ralph-o-bot start` to restart the daemon.')
 }
 
 // --- Internal helpers -------------------------------------------------------

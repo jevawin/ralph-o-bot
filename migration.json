@@ -1,9 +1,9 @@
 {
-  "version": "0.3.5",
-  "notes": "Manual update no longer starts the daemon after completing.",
+  "version": "0.3.6",
+  "notes": "Manual update now prompts user to restart the daemon.",
   "breaking": [],
   "features": [],
-  "fixes": ["`ralph-o-bot update` exits cleanly instead of starting the daemon after installing."],
+  "fixes": ["`ralph-o-bot update` now prints restart instructions on completion."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
