@@ -1,9 +1,9 @@
 {
-  "version": "0.3.8",
-  "notes": "New restart command and smarter post-update instructions.",
+  "version": "0.3.9",
+  "notes": "New status command and status printed on boot, start and restart.",
   "breaking": [],
-  "features": ["`ralph-o-bot restart` restarts Ralph-o-bot via systemd if installed, otherwise re-execs the daemon."],
-  "fixes": ["Post-update instructions now tell you to run `ralph-o-bot restart` instead of start."],
+  "features": ["`ralph-o-bot status` shows version, available updates, service state, last tick, last action, schedule and resource usage."],
+  "fixes": [],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
