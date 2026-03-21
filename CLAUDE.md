@@ -20,7 +20,7 @@ Future ideas and proposals live in `roadmap/` — one file per idea. Each file c
 
 | File | Purpose |
 |------|---------|
-| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `restart`, `status`, `update` |
+| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `restart`, `status`, `update`, `init`, `reinstall-clancy` |
 | `src/config.js` | Loads `.clancy/.env` + `.env`, exports label names and settings |
 | `src/dispatch.js` | Priority chain: update → review → build → plan → brief. One action per tick. |
 | `src/scheduler.js` | Sleep-loop daemon, quiet hours, resource check, periodic update check |
@@ -165,12 +165,14 @@ RALPH_MAX_LOAD_PER_CORE=0.8
 | `ralph-o-bot boot --auto-update` | Install service with automatic update checks enabled |
 | `ralph-o-bot restart` | Restart Ralph-o-bot — via systemd if installed, otherwise re-execs |
 | `ralph-o-bot status` | Print version, update availability, service state, last tick/action, schedule, resources |
-| `ralph-o-bot update` | Check for updates, show migration plan, prompt to apply |
-| `ralph-o-bot update -y` | Same but skips the confirmation prompt |
+| `ralph-o-bot update` | Check for updates, show migration plan, prompt to apply (defaults to y), then prompt to restart |
+| `ralph-o-bot update -y` | Same but skips all prompts and auto-restarts |
+| `ralph-o-bot init` | Install Clancy in the current directory — fresh project setup |
+| `ralph-o-bot reinstall-clancy` | Reinstall the pinned Clancy version from package.json |
 
 `ralph-o-bot run` is the primary tool for testing — single tick, inspectable output.
 
-`boot`, `start`, and `restart` all print status after completing.
+`start` prints "Ralph-o-bot started! Current status:" then status. `restart` prints "Ralph-o-bot restarted! Current status:" then status. `boot` prints status on completion.
 
 ## Publishing to npm
 
