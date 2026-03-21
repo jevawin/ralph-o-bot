@@ -46,24 +46,77 @@ function resolveClaude() {
   return 'claude' // last resort — rely on PATH
 }
 
+function envInt(name, def) {
+  const v = parseInt(process.env[name], 10)
+  return isNaN(v) || v <= 0 ? def : v
+}
+
+function envFloat(name, def) {
+  const v = parseFloat(process.env[name])
+  return isNaN(v) || v <= 0 ? def : v
+}
+
 // Auto-update
-export const RALPH_UPDATE_CHECK_INTERVAL_HOURS = parseFloat(process.env.RALPH_UPDATE_CHECK_INTERVAL_HOURS || '24')
+export const RALPH_UPDATE_CHECK_INTERVAL_HOURS = envFloat('RALPH_UPDATE_CHECK_INTERVAL_HOURS', 24)
 export const RALPH_MOCK_LATEST_VERSION         = process.env.RALPH_MOCK_LATEST_VERSION || null
 
 // Scheduler
-export const RALPH_SLEEP_SECONDS    = parseInt(process.env.RALPH_SLEEP_SECONDS || '30', 10)
-export const RALPH_QUIET_START      = process.env.RALPH_QUIET_START || '00:00'
-export const RALPH_QUIET_END        = process.env.RALPH_QUIET_END   || '00:00'
-export const RALPH_RESOURCE_CHECK   = process.env.RALPH_RESOURCE_CHECK !== 'false'
-export const RALPH_MIN_FREE_MEM_MB  = parseInt(process.env.RALPH_MIN_FREE_MEM_MB || '256', 10)
-export const RALPH_MAX_LOAD_PER_CORE = parseFloat(process.env.RALPH_MAX_LOAD_PER_CORE || '0.8')
+export const RALPH_SLEEP_SECONDS     = envInt('RALPH_SLEEP_SECONDS', 30)
+export const RALPH_QUIET_START       = process.env.RALPH_QUIET_START || '00:00'
+export const RALPH_QUIET_END         = process.env.RALPH_QUIET_END   || '00:00'
+export const RALPH_RESOURCE_CHECK    = process.env.RALPH_RESOURCE_CHECK !== 'false'
+export const RALPH_MIN_FREE_MEM_MB   = envInt('RALPH_MIN_FREE_MEM_MB', 256)
+export const RALPH_MAX_LOAD_PER_CORE = envFloat('RALPH_MAX_LOAD_PER_CORE', 0.8)
 
 function prompt(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => rl.question(question, answer => { rl.close(); resolve(answer) }))
 }
 
+function validateEnv() {
+  const errors = []
+
+  // Required vars
+  if (!process.env.GITHUB_TOKEN) {
+    errors.push('GITHUB_TOKEN is missing — add it to your .env file')
+  }
+  if (!process.env.GITHUB_REPO) {
+    errors.push('GITHUB_REPO is missing — add it to your .env file (e.g. owner/repo)')
+  } else if (!/^[\w.-]+\/[\w.-]+$/.test(process.env.GITHUB_REPO)) {
+    errors.push(`GITHUB_REPO is invalid: "${process.env.GITHUB_REPO}" — expected owner/repo format (e.g. jevawin/my-project)`)
+  }
+
+  if (errors.length) {
+    console.error('Ralph-o-bot: configuration error' + (errors.length > 1 ? 's' : '') + ':\n  ' + errors.join('\n  '))
+    process.exit(1)
+  }
+
+  // Optional vars — warn when set to bad values (exports already fall back to defaults)
+  const rawSleep = process.env.RALPH_SLEEP_SECONDS
+  if (rawSleep !== undefined && (isNaN(parseInt(rawSleep, 10)) || parseInt(rawSleep, 10) <= 0)) {
+    console.warn(`Warning: RALPH_SLEEP_SECONDS="${rawSleep}" is invalid — using default 30s`)
+  }
+  const rawMem = process.env.RALPH_MIN_FREE_MEM_MB
+  if (rawMem !== undefined && (isNaN(parseInt(rawMem, 10)) || parseInt(rawMem, 10) < 0)) {
+    console.warn(`Warning: RALPH_MIN_FREE_MEM_MB="${rawMem}" is invalid — using default 256`)
+  }
+  const rawLoad = process.env.RALPH_MAX_LOAD_PER_CORE
+  if (rawLoad !== undefined && (isNaN(parseFloat(rawLoad)) || parseFloat(rawLoad) <= 0)) {
+    console.warn(`Warning: RALPH_MAX_LOAD_PER_CORE="${rawLoad}" is invalid — using default 0.8`)
+  }
+
+  const timeRe = /^\d{2}:\d{2}$/
+  if (process.env.RALPH_QUIET_START && !timeRe.test(process.env.RALPH_QUIET_START)) {
+    console.warn(`Warning: RALPH_QUIET_START="${process.env.RALPH_QUIET_START}" is invalid — expected HH:MM, quiet hours disabled`)
+  }
+  if (process.env.RALPH_QUIET_END && !timeRe.test(process.env.RALPH_QUIET_END)) {
+    console.warn(`Warning: RALPH_QUIET_END="${process.env.RALPH_QUIET_END}" is invalid — expected HH:MM, quiet hours disabled`)
+  }
+}
+
 export async function validateConfig({ isUpdate = false } = {}) {
+  validateEnv()
+
   // Check the claude binary is accessible
   try {
     execSync(`which ${CLAUDE_BIN}`, { stdio: 'ignore' })
@@ -115,11 +168,4 @@ Install Clancy here now? y/n: `
     console.log()
   }
 
-  const missing = []
-  if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN (from .env)')
-  if (!GITHUB_REPO)  missing.push('GITHUB_REPO (from .env or .clancy/.env)')
-  if (missing.length) {
-    console.error('Ralph-o-bot: missing required config:\n  ' + missing.join('\n  '))
-    process.exit(1)
-  }
 }

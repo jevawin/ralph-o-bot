@@ -1,6 +1,6 @@
 # Startup Env Validation
 
-**Status:** Backlog
+**Status:** Shipped
 
 Validate required environment variables at startup with clear, actionable error messages — failing fast before Ralph attempts any GitHub or Clancy operations.
 
