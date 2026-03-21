@@ -404,7 +404,7 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
     console.log('The service definition has changed — re-run boot to apply it:')
     console.log(`  ralph-o-bot boot`)
   } else {
-    console.log('Run `ralph-o-bot restart` to restart.')
+    console.log('Run `ralph-o-bot restart` to restart Ralph-o-bot.')
   }
 }
 
