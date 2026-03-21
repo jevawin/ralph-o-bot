@@ -13,7 +13,8 @@
     "migration.json"
   ],
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm test"
   },
   "clancyVersion": "0.8.7",
   "dependencies": {
