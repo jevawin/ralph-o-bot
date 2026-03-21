@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: tag_check
+        run: |
+          if git tag | grep -q "^v${{ steps.version.outputs.value }}$"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build release notes
+        if: steps.tag_check.outputs.exists == 'false'
+        id: notes
+        run: |
+          node - << 'EOF'
+          const fs = require('fs')
+          const m = JSON.parse(fs.readFileSync('migration.json', 'utf8'))
+          const lines = [m.notes, '']
+          if (m.breaking?.length) {
+            lines.push('### Breaking changes')
+            m.breaking.forEach(s => lines.push(`- ${s}`))
+            lines.push('')
+          }
+          if (m.features?.length) {
+            lines.push('### New features')
+            m.features.forEach(s => lines.push(`- ${s}`))
+            lines.push('')
+          }
+          if (m.fixes?.length) {
+            lines.push('### Fixes')
+            m.fixes.forEach(s => lines.push(`- ${s}`))
+            lines.push('')
+          }
+          const body = lines.join('\n').trimEnd()
+          const output = process.env.GITHUB_OUTPUT
+          fs.appendFileSync(output, `body<<RELEASE_BODY\n${body}\nRELEASE_BODY\n`)
+          EOF
+
+      - name: Create tag and GitHub Release
+        if: steps.tag_check.outputs.exists == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.version.outputs.value }}" \
+            --title "v${{ steps.version.outputs.value }}" \
+            --notes "${{ steps.notes.outputs.body }}"
