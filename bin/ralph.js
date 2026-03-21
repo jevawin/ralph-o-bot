@@ -3,6 +3,7 @@ import { execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import readline from 'node:readline'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -107,9 +108,11 @@ Run 'npm install -g ralph-o-bot' first, then re-run 'ralph-o-bot boot'.`)
 
   // 3. Check root
   if (process.getuid() !== 0) {
-    console.log(`Installing a systemd service requires root.
-Re-run with: 'sudo env "PATH=$PATH" ralph-o-bot boot'`)
-    process.exit(1)
+    const answer = await promptYN('ralph-o-bot boot requires administrator privileges. Re-run with sudo? [y/N] ')
+    if (!answer) process.exit(1)
+    const bootArgs = autoUpdate ? ['boot', '--auto-update'] : ['boot']
+    execFileSync('sudo', ['env', `PATH=${process.env.PATH}`, ralphBin, ...bootArgs], { stdio: 'inherit' })
+    process.exit(0)
   }
 
   // 4. Write unit file
@@ -153,6 +156,16 @@ WantedBy=multi-user.target
 
   console.log(`Ralph-o-bot is installed and running.
 Check status with: systemctl status ralph-o-bot`)
+}
+
+function promptYN(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise(resolve => {
+    rl.question(question, answer => {
+      rl.close()
+      resolve(answer.trim().toLowerCase() === 'y')
+    })
+  })
 }
 
 main().catch(err => {
