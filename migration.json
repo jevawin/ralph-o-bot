@@ -1,9 +1,9 @@
 {
-  "version": "0.3.6",
-  "notes": "Manual update now prompts user to restart the daemon.",
+  "version": "0.3.7",
+  "notes": "Quality of life improvements to boot and manual update flow.",
   "breaking": [],
-  "features": [],
-  "fixes": ["`ralph-o-bot update` now prints restart instructions on completion."],
+  "features": ["`ralph-o-bot boot` now prompts to re-run with sudo instead of printing instructions."],
+  "fixes": ["Manual update shows context-aware restart instructions based on whether a boot is required."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
