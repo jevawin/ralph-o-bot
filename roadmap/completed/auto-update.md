@@ -1,6 +1,6 @@
 # Auto-Update
 
-**Status:** Backlog — ready to build
+**Status:** Completed — v0.3.x series
 
 Ralph should be able to update itself and its pinned Clancy version without manual intervention, notify the user of what changed, and handle board migrations mechanically where possible.
 

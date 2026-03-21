@@ -20,13 +20,14 @@ Future ideas and proposals live in `roadmap/` — one file per idea. Each file c
 
 | File | Purpose |
 |------|---------|
-| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `update` |
+| `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `restart`, `status`, `update` |
 | `src/config.js` | Loads `.clancy/.env` + `.env`, exports label names and settings |
 | `src/dispatch.js` | Priority chain: update → review → build → plan → brief. One action per tick. |
 | `src/scheduler.js` | Sleep-loop daemon, quiet hours, resource check, periodic update check |
 | `src/github.js` | GitHub REST API wrapper (native fetch, no library) |
 | `src/clancy.js` | Shells out to `claude --dangerously-skip-permissions` with a command |
-| `src/updater.js` | Auto-update: registry check, situation classification, issue creation, migration, install, restart |
+| `src/updater.js` | Auto-update: registry check, multi-version migration chain, issue creation, install, restart |
+| `src/status.js` | Status output — version, update availability, service state, last tick/action, schedule, resources |
 | `src/check-review.js` | PR comment logic → merge or re-run Clancy |
 | `src/check-build.js` | Build-label detection → `/clancy:once` |
 | `src/check-plan.js` | Plan-label issue comment logic → `/clancy:plan` variants |
@@ -133,10 +134,6 @@ echo "/clancy:once --afk #123" | claude --dangerously-skip-permissions
 
 `execFile` with stdin piped. stdout/stderr appended to `logs/ralph.log`. Working directory = project root (where `.clancy/` lives). 10 MB maxBuffer.
 
-## Seen-Comments Cursor (`.state.json`)
-
-Prevents infinite loop where Clancy finds a comment unactionable but Ralph keeps re-firing. Ralph records the last comment ID it acted on per issue/PR. It only fires on comments with IDs it hasn't seen. `src/state.js` exports `getLastActioned(id)` and `setLastActioned(id, commentId)`.
-
 ## Configuration
 
 Two `.env` files loaded at startup via `dotenv`:
@@ -164,12 +161,16 @@ RALPH_MAX_LOAD_PER_CORE=0.8
 | `ralph-o-bot run` | Single dispatch tick, then exit — main dev tool |
 | `ralph-o-bot start` | Daemon: run → sleep → run indefinitely |
 | `ralph-o-bot start --auto-update` | Daemon with automatic npm update checks every `RALPH_UPDATE_CHECK_INTERVAL_HOURS` |
-| `ralph-o-bot boot` | Install as systemd service (requires global install + root) |
+| `ralph-o-bot boot` | Install as systemd service — prompts to re-run with sudo if needed |
 | `ralph-o-bot boot --auto-update` | Install service with automatic update checks enabled |
+| `ralph-o-bot restart` | Restart Ralph-o-bot — via systemd if installed, otherwise re-execs |
+| `ralph-o-bot status` | Print version, update availability, service state, last tick/action, schedule, resources |
 | `ralph-o-bot update` | Check for updates, show migration plan, prompt to apply |
 | `ralph-o-bot update -y` | Same but skips the confirmation prompt |
 
 `ralph-o-bot run` is the primary tool for testing — single tick, inspectable output.
+
+`boot`, `start`, and `restart` all print status after completing.
 
 ## Publishing to npm
 
@@ -181,7 +182,23 @@ Checklist for each release:
 3. Bump `version` in `migration.json` to match — and update `notes`, `boardChanges`, etc. as needed
 4. `npm publish --access public`
 
-**`migration.json` field rules:**
+**`migration.json` schema:**
+```json
+{
+  "version": "1.2.0",
+  "notes": "One-line summary for the changelog",
+  "breaking": ["Things the user must change (shown in update issue)"],
+  "features": ["New opt-in capabilities (shown in update issue)"],
+  "fixes": ["Fixes and general updates (shown in update issue)"],
+  "boardChanges": [{ "type": "labelRename", "from": "old", "to": "new" }],
+  "requiresBoot": false,
+  "requiresManual": false
+}
+```
+
+`breaking`, `features`, `fixes` are optional arrays. Items are tagged with their version in the update issue when multiple versions are bundled.
+
+**`migration.json` situation rules:**
 - `boardChanges` present → `update:pending` (user must approve before install)
 - `requiresManual: true` or `requiresBoot: true` → `update:action-required` (manual steps needed)
 - Major semver bump → always `update:action-required` regardless of manifest

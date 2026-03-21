@@ -1,6 +1,6 @@
 # Error Reporting via GitHub Issues
 
-**Status:** Backlog
+**Status:** Backlog — next priority after deploy tooling
 
 When Ralph encounters an unhandled error during a dispatch tick, it should open a GitHub issue so the problem is visible without needing to SSH in and tail logs.
 
