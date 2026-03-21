@@ -1,6 +1,7 @@
 import { BUILD_LABEL } from './config.js'
 import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch } from './github.js'
 import { classify } from './sentiment.js'
+import { appendPRInstructions } from './instructions.js'
 
 /**
  * Check for issues in review state — find linked PR, inspect latest comment.
@@ -21,6 +22,8 @@ export async function checkReview(username) {
 
     const pr = prs[0]
     const comments = await listPRComments(pr.number)
+
+    await appendPRInstructions(pr, comments)
 
     // Find most recent comment from jevawin
     let lastUserComment = null
