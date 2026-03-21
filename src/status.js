@@ -147,14 +147,26 @@ export async function printStatus() {
   const memOk  = freeMB >= RALPH_MIN_FREE_MEM_MB
   const loadOk = parseFloat(loadPerCore) <= RALPH_MAX_LOAD_PER_CORE
 
-  let clancyVersion = pkg.clancyVersion || 'unknown'
+  const desiredClancy = pkg.clancyVersion || 'unknown'
+  let actualClancy = null
   try {
     const clancyPkg = require(path.join(process.cwd(), 'node_modules/chief-clancy/package.json'))
-    clancyVersion = `v${clancyPkg.version}`
+    actualClancy = clancyPkg.version
   } catch {}
 
-  console.log(`Ralph-o-bot v${pkg.version}  ·  Clancy ${clancyVersion}`)
+  const clancyMismatch = desiredClancy !== 'latest' && actualClancy && actualClancy !== desiredClancy
+
+  console.log(`Ralph-o-bot v${pkg.version}`)
   console.log(`Update:  ${updateLine}`)
+  console.log()
+  console.log('CLANCY')
+  console.log(`  Desired:  ${desiredClancy}`)
+  console.log(`  Actual:   ${actualClancy ? `v${actualClancy}` : 'not found'}`)
+  if (clancyMismatch) {
+    console.log()
+    console.log(`  Warning: Clancy version mismatch. Ralph-o-bot may misbehave.`)
+    console.log(`  Run \`ralph-o-bot reinstall-clancy\` to install the correct version.`)
+  }
   console.log()
   console.log('SERVICE')
   console.log(`  Status:       ${serviceStatus}`)

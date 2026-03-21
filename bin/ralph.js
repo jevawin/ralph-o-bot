@@ -33,6 +33,9 @@ async function main() {
     case 'status':
       await runStatus()
       break
+    case 'reinstall-clancy':
+      await reinstallClancy()
+      break
     default:
       console.log(`ralph-o-bot v${pkg.version}
 
@@ -43,6 +46,7 @@ Usage:
   ralph-o-bot boot             Install and start as a systemd service
   ralph-o-bot boot --auto-update   Install service with automatic update checks
   ralph-o-bot status           Show version, update, service, activity and resource status
+  ralph-o-bot reinstall-clancy Reinstall the pinned Clancy version from package.json
   ralph-o-bot restart          Restart Ralph-o-bot (via systemd if installed, otherwise re-exec)
   ralph-o-bot update           Check for updates, show plan, prompt to apply
   ralph-o-bot update -y        Check for updates and apply without prompting
@@ -85,6 +89,13 @@ async function startDaemon() {
 
   const { startDaemon: runDaemon } = await import('../src/scheduler.js')
   await runDaemon({ autoUpdate })
+}
+
+async function reinstallClancy() {
+  const clancyVersion = pkg.clancyVersion || 'latest'
+  console.log(`Installing chief-clancy@${clancyVersion}...`)
+  execFileSync('npx', [`chief-clancy@${clancyVersion}`], { stdio: 'inherit', cwd: process.cwd() })
+  console.log('Done.')
 }
 
 async function runStatus() {
