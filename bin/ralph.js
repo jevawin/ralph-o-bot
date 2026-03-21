@@ -76,7 +76,7 @@ async function startDaemon() {
   await validateConfig()
 
   const isSystemd = Boolean(process.env.INVOCATION_ID)
-  console.log(`Ralph-o-bot v${pkg.version} — at your service.`)
+  console.log(`Ralph-o-bot started! Current status:`)
   console.log(`Watching ${GITHUB_REPO} every ${RALPH_SLEEP_SECONDS}s. Ctrl+C to stop.`)
   if (autoUpdate) console.log('Auto-update: enabled.')
   if (!isSystemd) {
@@ -99,6 +99,7 @@ async function reinstallClancy() {
   const clancyVersion = pkg.clancyVersion || 'latest'
   console.log(`Installing chief-clancy@${clancyVersion}...`)
   execFileSync('npx', [`chief-clancy@${clancyVersion}`], { stdio: 'inherit', cwd: process.cwd() })
+  fs.writeFileSync(path.join(process.cwd(), '.clancy/.ralph-clancy-version'), clancyVersion, 'utf8')
   console.log('Done.')
 }
 
@@ -200,6 +201,7 @@ async function restart() {
   const unitFile = '/etc/systemd/system/ralph-o-bot.service'
   if (fs.existsSync(unitFile)) {
     execFileSync('sudo', ['systemctl', 'restart', 'ralph-o-bot'], { stdio: 'inherit' })
+    console.log('Ralph-o-bot restarted! Current status:')
     const { printStatus } = await import('../src/status.js')
     await printStatus()
   } else {

@@ -150,8 +150,7 @@ export async function printStatus() {
   const desiredClancy = pkg.clancyVersion || 'unknown'
   let actualClancy = null
   try {
-    const clancyPkg = require(path.join(process.cwd(), 'node_modules/chief-clancy/package.json'))
-    actualClancy = clancyPkg.version
+    actualClancy = fs.readFileSync(path.join(process.cwd(), '.clancy/.ralph-clancy-version'), 'utf8').trim()
   } catch {}
 
   const clancyMismatch = desiredClancy !== 'latest' && actualClancy && actualClancy !== desiredClancy

@@ -1,10 +1,10 @@
 {
-  "version": "0.4.1",
-  "clancyVersion": "latest",
-  "notes": "Clearer wrong-directory errors, new ralph-o-bot init command.",
+  "version": "0.4.2",
+  "clancyVersion": "0.8.7",
+  "notes": "Fix Clancy version display, pin Clancy to 0.8.7, started/restarted status headers.",
   "breaking": [],
-  "features": ["New `ralph-o-bot init` command to set up Clancy in the current directory."],
-  "fixes": ["Wrong-directory errors now explain the likely cause and point to `ralph-o-bot init` instead of prompting to install."],
+  "features": ["Status now shows started/restarted header when running ralph-o-bot start or restart."],
+  "fixes": ["Clancy actual version now correctly detected (stored after install, not from node_modules).", "Clancy pinned to exact version 0.8.7 instead of latest."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
