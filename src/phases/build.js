@@ -6,6 +6,7 @@ export async function buildPhase(ctx) {
   if (!build) return true
 
   ctx.log(`Build: issue #${build.issue.number} → ${build.command}`)
+  ctx.setAction('build', build.issue.number)
   await runClancy(build.command, ctx.cwd)
   ctx.log('Build complete — updating docs')
   await runClancy('/clancy:update-docs', ctx.cwd)

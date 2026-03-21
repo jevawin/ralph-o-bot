@@ -6,6 +6,7 @@ export async function planPhase(ctx) {
   if (!plan) return true
 
   ctx.log(`Plan: issue #${plan.issue.number} → ${plan.command}`)
+  ctx.setAction('plan', plan.issue.number)
   await runClancy(plan.command, ctx.cwd)
   return false
 }

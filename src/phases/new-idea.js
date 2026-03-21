@@ -6,6 +6,7 @@ export async function newIdeaPhase(ctx) {
   if (!newIdea) return true
 
   ctx.log(`New idea: issue #${newIdea.issue.number} → ${newIdea.command}`)
+  ctx.setAction('new-idea', newIdea.issue.number)
   await runClancy(newIdea.command, ctx.cwd)
   return false
 }

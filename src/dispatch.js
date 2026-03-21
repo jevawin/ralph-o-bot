@@ -1,4 +1,5 @@
 import { getCurrentUser } from './github.js'
+import { acquireLock, releaseLock, setLockAction } from './lock.js'
 import { updatePhase } from './phases/update.js'
 import { reviewPhase } from './phases/review.js'
 import { buildPhase } from './phases/build.js'
@@ -18,15 +19,21 @@ function log(msg) {
  * Each phase returns false to stop the pipeline (action taken) or true to continue.
  */
 export async function dispatch() {
+  if (!acquireLock(log)) return
+
   const ctx = {
     username: await getCurrentUser(),
     cwd: process.cwd(),
     log,
+    setAction: setLockAction,
   }
 
-  for (const phase of PHASES) {
-    if (!await phase(ctx)) return
+  try {
+    for (const phase of PHASES) {
+      if (!await phase(ctx)) return
+    }
+    log('Nothing to do.')
+  } finally {
+    releaseLock()
   }
-
-  log('Nothing to do.')
 }

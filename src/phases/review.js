@@ -11,6 +11,7 @@ export async function reviewPhase(ctx) {
   }
 
   ctx.log(`Review feedback on PR #${review.pr.number} → ${review.command}`)
+  ctx.setAction('review', review.issue.number)
   await runClancy(review.command, ctx.cwd)
   return false
 }
