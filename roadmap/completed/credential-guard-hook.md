@@ -1,6 +1,6 @@
 # Credential Guard Hook
 
-**Status:** Backlog
+**Status:** Shipped
 
 Add a PreToolUse Claude Code hook that blocks Write/Edit operations if the file content contains credential patterns — preventing accidental secret commits from Clancy runs that Ralph orchestrates.
 
