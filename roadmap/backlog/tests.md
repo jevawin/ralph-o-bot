@@ -1,7 +1,7 @@
 # Test Suite
 
-**Status:** Backlog — priority #2
-**Depends on:** phase-pipeline-refactor (dispatch stages need to be split before they're testable in isolation; sentiment.js and scheduler.js can be tested now)
+**Status:** Backlog — priority #1 (phase-pipeline-refactor now shipped)
+**Depends on:** ~~phase-pipeline-refactor~~ (done)
 
 Add a unit test suite for Ralph's core logic modules — dispatch stages, sentiment classifier, scheduler conditions, and env validation.
 
@@ -35,7 +35,7 @@ Vitest is the natural choice (same as Clancy, ESM-native, no config overhead). U
 npm install --save-dev vitest
 ```
 
-Test files co-located with source: `src/sentiment.test.js`, `src/scheduler.test.js`, etc.
+Test files live in `test/` at the project root (not co-located with source) — keeps them out of the npm package without needing `.npmignore`. e.g. `test/sentiment.test.js`, `test/scheduler.test.js`.
 
 Add to `package.json`:
 ```json
@@ -46,5 +46,4 @@ Add to `package.json`:
 
 ## Open Questions
 
-- Should tests be added before or after the phase pipeline refactor? After — the refactor makes dispatch stages independently testable.
 - Integration tests (real GitHub API calls) — worth adding later under a separate `test:integration` script, gated by `GITHUB_TOKEN` presence.

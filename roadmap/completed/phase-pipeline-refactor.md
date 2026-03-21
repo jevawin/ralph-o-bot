@@ -1,6 +1,6 @@
 # Phase Pipeline Refactor
 
-**Status:** Backlog — next priority (#1 of remaining)
+**Status:** Shipped
 
 Refactor `dispatch.js` from a monolithic priority chain into composable phase functions — one per dispatch stage — inspired by Clancy's once orchestrator pattern.
 
