@@ -63,7 +63,7 @@ function prompt(question) {
   return new Promise(resolve => rl.question(question, answer => { rl.close(); resolve(answer) }))
 }
 
-export async function validateConfig() {
+export async function validateConfig({ isUpdate = false } = {}) {
   // Check the claude binary is accessible
   try {
     execSync(`which ${CLAUDE_BIN}`, { stdio: 'ignore' })
@@ -78,15 +78,30 @@ Or set CLAUDE_BIN in .env to the correct path.`)
   // Check Clancy is installed (.clancy/ directory in project root)
   const clancyDir = path.join(process.cwd(), '.clancy')
   if (!fs.existsSync(clancyDir)) {
+    if (isUpdate) {
+      console.error(`No .clancy/ directory found in ${process.cwd()}.
+
+You're probably in the wrong directory — run ralph-o-bot from your project root (the folder that contains .clancy/).
+
+To set up Ralph-o-bot fresh in this directory, run: ralph-o-bot init`)
+      process.exit(1)
+    }
+
     const answer = await prompt(
-      'Chief Clancy must be installed for Ralph-o-bot to run. Install Clancy now (npx chief-clancy)? y/n: '
+      `No .clancy/ directory found in ${process.cwd()}.
+
+You may be in the wrong directory — ralph-o-bot should be run from your project root (the folder that contains .clancy/).
+
+To set up Ralph-o-bot fresh in this directory instead, run: ralph-o-bot init
+
+Install Clancy here now? y/n: `
     )
     if (answer.trim().toLowerCase() === 'y') {
       console.log('Installing Clancy...')
       execFileSync('npx', ['chief-clancy'], { stdio: 'inherit', cwd: process.cwd() })
       console.log()
     } else {
-      console.log('Aborted. Run `npx chief-clancy` to install Clancy, then re-run ralph-o-bot.')
+      console.log('Aborted. cd into your project root and try again, or run `ralph-o-bot init` to set up here.')
       process.exit(0)
     }
   }

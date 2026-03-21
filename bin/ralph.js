@@ -36,6 +36,9 @@ async function main() {
     case 'reinstall-clancy':
       await reinstallClancy()
       break
+    case 'init':
+      await init()
+      break
     default:
       console.log(`ralph-o-bot v${pkg.version}
 
@@ -46,6 +49,7 @@ Usage:
   ralph-o-bot boot             Install and start as a systemd service
   ralph-o-bot boot --auto-update   Install service with automatic update checks
   ralph-o-bot status           Show version, update, service, activity and resource status
+  ralph-o-bot init             Install Clancy in the current directory (fresh project setup)
   ralph-o-bot reinstall-clancy Reinstall the pinned Clancy version from package.json
   ralph-o-bot restart          Restart Ralph-o-bot (via systemd if installed, otherwise re-exec)
   ralph-o-bot update           Check for updates, show plan, prompt to apply
@@ -98,6 +102,12 @@ async function reinstallClancy() {
   console.log('Done.')
 }
 
+async function init() {
+  console.log(`Setting up Ralph-o-bot in ${process.cwd()}...\n`)
+  execFileSync('npx', ['chief-clancy'], { stdio: 'inherit', cwd: process.cwd() })
+  console.log('\nDone. Now run `ralph-o-bot start` from this directory.')
+}
+
 async function runStatus() {
   const { printStatus } = await import('../src/status.js')
   await printStatus()
@@ -105,7 +115,7 @@ async function runStatus() {
 
 async function runUpdate() {
   const { validateConfig } = await import('../src/config.js')
-  await validateConfig()
+  await validateConfig({ isUpdate: true })
   const skipConfirm = args.includes('-y')
   const { applyUpdateInteractive } = await import('../src/updater.js')
   await applyUpdateInteractive({ skipConfirm })

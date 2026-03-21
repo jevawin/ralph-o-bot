@@ -1,10 +1,10 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "clancyVersion": "latest",
-  "notes": "Clancy now reinstalled on every update, Clancy version shown in status.",
+  "notes": "Clearer wrong-directory errors, new ralph-o-bot init command.",
   "breaking": [],
-  "features": ["Clancy is now reinstalled to the correct version on every Ralph update."],
-  "fixes": ["Status now shows desired vs actual Clancy version with mismatch warning."],
+  "features": ["New `ralph-o-bot init` command to set up Clancy in the current directory."],
+  "fixes": ["Wrong-directory errors now explain the likely cause and point to `ralph-o-bot init` instead of prompting to install."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
