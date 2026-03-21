@@ -1,9 +1,10 @@
 {
-  "version": "0.3.9",
-  "notes": "New status command and status printed on boot, start and restart.",
+  "version": "0.4.0",
+  "clancyVersion": "latest",
+  "notes": "Clancy now reinstalled on every update, Clancy version shown in status.",
   "breaking": [],
-  "features": ["`ralph-o-bot status` shows version, available updates, service state, last tick, last action, schedule and resource usage."],
-  "fixes": [],
+  "features": ["Clancy is now reinstalled to the correct version on every Ralph update."],
+  "fixes": ["Status now shows desired vs actual Clancy version with mismatch warning."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false

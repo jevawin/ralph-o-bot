@@ -160,7 +160,7 @@ export async function printStatus() {
   console.log(`Update:  ${updateLine}`)
   console.log()
   console.log('CLANCY')
-  console.log(`  Desired:  ${desiredClancy}`)
+  console.log(`  Desired:  ${desiredClancy.startsWith('v') ? desiredClancy : `v${desiredClancy}`}`)
   console.log(`  Actual:   ${actualClancy ? `v${actualClancy}` : 'not found'}`)
   if (clancyMismatch) {
     console.log()

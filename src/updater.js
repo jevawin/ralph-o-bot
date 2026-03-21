@@ -83,6 +83,7 @@ function mergeMigrations(versionedMigrations) {
   let boardChanges = []
   let requiresBoot = false
   let requiresManual = false
+  let clancyVersion = null
 
   for (const { version, migration } of versionedMigrations) {
     if (migration.notes) notes.push({ version, text: migration.notes })
@@ -91,6 +92,7 @@ function mergeMigrations(versionedMigrations) {
     for (const item of (migration.fixes || [])) fixes.push(`${item} (v${version})`)
     if (migration.requiresBoot) requiresBoot = true
     if (migration.requiresManual) requiresManual = true
+    if (migration.clancyVersion) clancyVersion = migration.clancyVersion
 
     // Chain-collapse labelRename: A→B then B→C becomes A→C
     for (const change of (migration.boardChanges || [])) {
@@ -107,7 +109,7 @@ function mergeMigrations(versionedMigrations) {
     }
   }
 
-  return { breaking, features, fixes, notes, boardChanges, requiresBoot, requiresManual }
+  return { breaking, features, fixes, notes, boardChanges, requiresBoot, requiresManual, clancyVersion }
 }
 
 // --- Situation classification -----------------------------------------------
@@ -126,6 +128,10 @@ function buildIssueBody(situation, currentVersion, latestVersion, migration) {
     `## Ralph-o-bot Update: v${currentVersion} → v${latestVersion}`,
     '',
   ]
+
+  if (migration.clancyVersion) {
+    lines.push(`_Clancy will be updated to \`${migration.clancyVersion}\`_`, '')
+  }
 
   if (migration.breaking?.length > 0) {
     lines.push('### Required changes', '')
@@ -327,14 +333,13 @@ export async function applyUpdate(latestVersion, migration, pendingIssue, { rest
   log(`Installing ralph-o-bot@${latestVersion}...`)
   execFileSync('npm', ['install', '-g', `ralph-o-bot@${latestVersion}`], { stdio: 'inherit' })
 
-  // 3. Install pinned Clancy version if specified
-  if (migration.clancyVersion) {
-    log(`Installing chief-clancy@${migration.clancyVersion}...`)
-    execFileSync('npx', [`chief-clancy@${migration.clancyVersion}`], {
-      stdio: 'inherit',
-      cwd: process.cwd()
-    })
-  }
+  // 3. Install pinned Clancy version
+  const clancyTarget = migration.clancyVersion || 'latest'
+  log(`Installing chief-clancy@${clancyTarget}...`)
+  execFileSync('npx', [`chief-clancy@${clancyTarget}`], {
+    stdio: 'inherit',
+    cwd: process.cwd()
+  })
 
   // 4. Close pending issue if any
   if (pendingIssue) {
