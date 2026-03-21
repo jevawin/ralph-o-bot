@@ -1,11 +1,12 @@
 import { getCurrentUser } from './github.js'
-import { checkReview } from './check-review.js'
-import { checkBuild } from './check-build.js'
-import { checkPlan } from './check-plan.js'
-import { checkBrief } from './check-brief.js'
-import { checkNewIdea } from './check-new-idea.js'
-import { runClancy } from './clancy.js'
-import { checkUpdateApproval, checkUpdateBlocked, applyUpdate } from './updater.js'
+import { updatePhase } from './phases/update.js'
+import { reviewPhase } from './phases/review.js'
+import { buildPhase } from './phases/build.js'
+import { planPhase } from './phases/plan.js'
+import { briefPhase } from './phases/brief.js'
+import { newIdeaPhase } from './phases/new-idea.js'
+
+const PHASES = [updatePhase, reviewPhase, buildPhase, planPhase, briefPhase, newIdeaPhase]
 
 function log(msg) {
   console.log(`[${new Date().toISOString()}] ${msg}`)
@@ -13,70 +14,18 @@ function log(msg) {
 
 /**
  * One tick of the dispatch loop.
- * Priority: review → build → plan → brief
+ * Priority: update → review → build → plan → brief → new idea
+ * Each phase returns false to stop the pipeline (action taken) or true to continue.
  */
 export async function dispatch() {
-  const username = await getCurrentUser()
-  const cwd = process.cwd()
-
-  // 0a. Apply any approved update:pending
-  const updateApproval = await checkUpdateApproval(username)
-  if (updateApproval) {
-    log(`Update:pending approved — applying v${updateApproval.latestVersion}`)
-    await applyUpdate(updateApproval.latestVersion, updateApproval.migration, updateApproval.issue)
-    return
+  const ctx = {
+    username: await getCurrentUser(),
+    cwd: process.cwd(),
+    log,
   }
 
-  // 0b. Pause dispatch if update:pending or update:action-required is open
-  if (await checkUpdateBlocked()) {
-    log('Dispatch paused — update pending or action required.')
-    return
-  }
-
-  // 1. review
-  const review = await checkReview(username)
-  if (review) {
-    if (review.merged) {
-      log(`Merged PR #${review.pr.number} for issue #${review.issue.number}`)
-      return
-    }
-    log(`Review feedback on PR #${review.pr.number} → ${review.command}`)
-    await runClancy(review.command, cwd)
-    return
-  }
-
-  // 2. build
-  const build = await checkBuild(username)
-  if (build) {
-    log(`Build: issue #${build.issue.number} → ${build.command}`)
-    await runClancy(build.command, cwd)
-    log('Build complete — updating docs')
-    await runClancy('/clancy:update-docs', cwd)
-    return
-  }
-
-  // 3. plan
-  const plan = await checkPlan(username)
-  if (plan) {
-    log(`Plan: issue #${plan.issue.number} → ${plan.command}`)
-    await runClancy(plan.command, cwd)
-    return
-  }
-
-  // 4. brief
-  const brief = await checkBrief(username)
-  if (brief) {
-    log(`Brief: issue #${brief.issue.number} → ${brief.command}`)
-    await runClancy(brief.command, cwd)
-    return
-  }
-
-  // 5. new idea
-  const newIdea = await checkNewIdea(username)
-  if (newIdea) {
-    log(`New idea: issue #${newIdea.issue.number} → ${newIdea.command}`)
-    await runClancy(newIdea.command, cwd)
-    return
+  for (const phase of PHASES) {
+    if (!await phase(ctx)) return
   }
 
   log('Nothing to do.')
