@@ -41,6 +41,15 @@ async function fetchLatestVersion() {
   return data.version
 }
 
+async function fetchAllVersionsBetween(current, latest) {
+  const res = await fetch('https://registry.npmjs.org/ralph-o-bot')
+  if (!res.ok) throw new Error(`npm registry metadata fetch failed: ${res.status}`)
+  const data = await res.json()
+  return Object.keys(data.versions)
+    .filter(v => isNewer(v, current) && !isNewer(v, latest))
+    .sort((a, b) => isNewer(a, b) ? 1 : -1)
+}
+
 async function fetchMigration(version) {
   try {
     const res = await fetch(`https://unpkg.com/ralph-o-bot@${version}/migration.json`)
@@ -49,6 +58,56 @@ async function fetchMigration(version) {
   } catch {
     return {}
   }
+}
+
+async function fetchIntermediateMigrations(current, latest) {
+  const versions = await fetchAllVersionsBetween(current, latest)
+  if (versions.length > 10) {
+    log(`Warning: ${versions.length} versions behind — applying all migrations in order`)
+  }
+  const results = []
+  for (const version of versions) {
+    const migration = await fetchMigration(version)
+    results.push({ version, migration })
+  }
+  return results
+}
+
+// --- Migration merge --------------------------------------------------------
+
+function mergeMigrations(versionedMigrations) {
+  const breaking = []
+  const features = []
+  const fixes = []
+  const notes = []
+  let boardChanges = []
+  let requiresBoot = false
+  let requiresManual = false
+
+  for (const { version, migration } of versionedMigrations) {
+    if (migration.notes) notes.push({ version, text: migration.notes })
+    for (const item of (migration.breaking || [])) breaking.push(`${item} (v${version})`)
+    for (const item of (migration.features || [])) features.push(`${item} (v${version})`)
+    for (const item of (migration.fixes || [])) fixes.push(`${item} (v${version})`)
+    if (migration.requiresBoot) requiresBoot = true
+    if (migration.requiresManual) requiresManual = true
+
+    // Chain-collapse labelRename: A→B then B→C becomes A→C
+    for (const change of (migration.boardChanges || [])) {
+      if (change.type === 'labelRename') {
+        const existing = boardChanges.find(c => c.type === 'labelRename' && c.to === change.from)
+        if (existing) {
+          existing.to = change.to
+        } else {
+          boardChanges.push({ ...change })
+        }
+      } else {
+        boardChanges.push({ ...change })
+      }
+    }
+  }
+
+  return { breaking, features, fixes, notes, boardChanges, requiresBoot, requiresManual }
 }
 
 // --- Situation classification -----------------------------------------------
@@ -68,8 +127,31 @@ function buildIssueBody(situation, currentVersion, latestVersion, migration) {
     '',
   ]
 
-  if (migration.notes) {
-    lines.push('### What changed', '', migration.notes, '')
+  if (migration.breaking?.length > 0) {
+    lines.push('### Required changes', '')
+    for (const item of migration.breaking) lines.push(`- ${item}`)
+    lines.push('')
+  }
+
+  if (migration.features?.length > 0) {
+    lines.push('### New features', '')
+    for (const item of migration.features) lines.push(`- ${item}`)
+    lines.push('')
+  }
+
+  if (migration.fixes?.length > 0) {
+    lines.push('### Updates & fixes', '')
+    for (const item of migration.fixes) lines.push(`- ${item}`)
+    lines.push('')
+  }
+
+  // Changelog — notes is either an array of { version, text } (merged) or a plain string (single)
+  if (Array.isArray(migration.notes) && migration.notes.length > 0) {
+    lines.push('### Changelog', '')
+    for (const { version, text } of migration.notes) lines.push(`**v${version}** — ${text}`)
+    lines.push('')
+  } else if (typeof migration.notes === 'string' && migration.notes) {
+    lines.push('### Changelog', '', migration.notes, '')
   }
 
   if (situation === 'complete') {
@@ -77,7 +159,7 @@ function buildIssueBody(situation, currentVersion, latestVersion, migration) {
   }
 
   if (situation === 'pending') {
-    lines.push('### Board changes required', '')
+    lines.push('---', '', '### Board changes required', '')
     for (const change of (migration.boardChanges || [])) {
       if (change.type === 'labelRename') {
         lines.push(`- Rename label \`${change.from}\` → \`${change.to}\` on all open issues`)
@@ -87,7 +169,7 @@ function buildIssueBody(situation, currentVersion, latestVersion, migration) {
   }
 
   if (situation === 'action-required') {
-    lines.push('### Manual steps required', '')
+    lines.push('---', '', '### Manual steps required', '')
     if (getMajor(latestVersion) > getMajor(currentVersion)) {
       lines.push('- This is a **major version bump** — manual review required before updating.')
     }
@@ -141,9 +223,10 @@ export async function checkAndHandleUpdate() {
 
   log(`New version available: v${currentVersion} → v${latestVersion}`)
 
-  const migration = await fetchMigration(latestVersion)
+  const versionedMigrations = await fetchIntermediateMigrations(currentVersion, latestVersion)
+  const migration = mergeMigrations(versionedMigrations)
   const situation = classifySituation(currentVersion, latestVersion, migration)
-  log(`Situation: ${situation}`)
+  log(`Situation: ${situation} (across ${versionedMigrations.length} version(s))`)
 
   if (situation === 'complete') {
     await applyUpdate(latestVersion, migration, null)
@@ -200,12 +283,15 @@ export async function checkUpdateApproval(username) {
     if (!lastUserComment) continue
     if (lastUserComment.body?.trim().toLowerCase() !== 'approved') continue
 
-    // Parse target version from title: "Ralph-o-bot update available: vX.Y.Z → vA.B.C"
-    const match = issue.title.match(/→ v([\d.]+)/)
-    if (!match) continue
+    // Parse version range from title: "Ralph-o-bot update available: vX.Y.Z → vA.B.C"
+    const fromMatch = issue.title.match(/v([\d.]+) →/)
+    const toMatch = issue.title.match(/→ v([\d.]+)/)
+    if (!fromMatch || !toMatch) continue
 
-    const latestVersion = match[1]
-    const migration = await fetchMigration(latestVersion)
+    const fromVersion = fromMatch[1]
+    const latestVersion = toMatch[1]
+    const versionedMigrations = await fetchIntermediateMigrations(fromVersion, latestVersion)
+    const migration = mergeMigrations(versionedMigrations)
     return { issue, latestVersion, migration }
   }
 
@@ -292,7 +378,8 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
     return
   }
 
-  const migration = await fetchMigration(latestVersion)
+  const versionedMigrations = await fetchIntermediateMigrations(currentVersion, latestVersion)
+  const migration = mergeMigrations(versionedMigrations)
   const situation = classifySituation(currentVersion, latestVersion, migration)
   const body = buildIssueBody(situation, currentVersion, latestVersion, migration)
 
