@@ -108,7 +108,7 @@ Run 'npm install -g ralph-o-bot' first, then re-run 'ralph-o-bot boot'.`)
   // 3. Check root
   if (process.getuid() !== 0) {
     console.log(`Installing a systemd service requires root.
-Re-run with sudo: 'sudo ralph-o-bot boot'`)
+Re-run with: 'sudo env "PATH=$PATH" ralph-o-bot boot'`)
     process.exit(1)
   }
 
