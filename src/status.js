@@ -147,7 +147,13 @@ export async function printStatus() {
   const memOk  = freeMB >= RALPH_MIN_FREE_MEM_MB
   const loadOk = parseFloat(loadPerCore) <= RALPH_MAX_LOAD_PER_CORE
 
-  console.log(`Ralph-o-bot v${pkg.version}`)
+  let clancyVersion = pkg.clancyVersion || 'unknown'
+  try {
+    const clancyPkg = require(path.join(process.cwd(), 'node_modules/chief-clancy/package.json'))
+    clancyVersion = `v${clancyPkg.version}`
+  } catch {}
+
+  console.log(`Ralph-o-bot v${pkg.version}  ·  Clancy ${clancyVersion}`)
   console.log(`Update:  ${updateLine}`)
   console.log()
   console.log('SERVICE')
