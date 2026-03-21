@@ -1,9 +1,9 @@
 {
-  "version": "0.3.7",
-  "notes": "Quality of life improvements to boot and manual update flow.",
+  "version": "0.3.8",
+  "notes": "New restart command and smarter post-update instructions.",
   "breaking": [],
-  "features": ["`ralph-o-bot boot` now prompts to re-run with sudo instead of printing instructions."],
-  "fixes": ["Manual update shows context-aware restart instructions based on whether a boot is required."],
+  "features": ["`ralph-o-bot restart` restarts Ralph-o-bot via systemd if installed, otherwise re-execs the daemon."],
+  "fixes": ["Post-update instructions now tell you to run `ralph-o-bot restart` instead of start."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
