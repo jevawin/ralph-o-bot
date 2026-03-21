@@ -1,9 +1,9 @@
 {
-  "version": "0.3.4",
-  "notes": "Multi-version update chain — all intermediate migrations now applied in order.",
+  "version": "0.3.5",
+  "notes": "Manual update no longer starts the daemon after completing.",
   "breaking": [],
-  "features": ["Updates now walk every intermediate version — no migrations are skipped if Ralph falls behind."],
-  "fixes": [],
+  "features": [],
+  "fixes": ["`ralph-o-bot update` exits cleanly instead of starting the daemon after installing."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false

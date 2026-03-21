@@ -305,8 +305,10 @@ export async function checkUpdateApproval(username) {
  * @param {string} latestVersion
  * @param {object} migration
  * @param {object|null} pendingIssue  Issue to close (null for auto/manual updates)
+ * @param {object} opts
+ * @param {boolean} [opts.restart=true]  Set false to skip restart (manual update command)
  */
-export async function applyUpdate(latestVersion, migration, pendingIssue) {
+export async function applyUpdate(latestVersion, migration, pendingIssue, { restart: doRestart = true } = {}) {
   const currentVersion = pkg.version
 
   // 1. Board changes
@@ -349,9 +351,11 @@ export async function applyUpdate(latestVersion, migration, pendingIssue) {
     log(`Created update:complete issue #${issue.number}`)
   }
 
-  // 6. Restart
-  log('Restarting...')
-  restart()
+  // 6. Restart (skipped for manual `ralph-o-bot update` invocations)
+  if (doRestart) {
+    log('Restarting...')
+    restart()
+  }
 }
 
 /**
@@ -394,7 +398,8 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
     }
   }
 
-  await applyUpdate(latestVersion, migration, null)
+  await applyUpdate(latestVersion, migration, null, { restart: false })
+  console.log('Update complete.')
 }
 
 // --- Internal helpers -------------------------------------------------------
