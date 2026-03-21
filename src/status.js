@@ -137,7 +137,7 @@ export async function printStatus() {
       : `${service.active} (systemd)`
 
   const lastTickStr = lastTick
-    ? `${timeAgo(lastTick.time)} · ${lastTick.message}`
+    ? `${formatTime(lastTick.time)} · ${lastTick.message}`
     : 'no log entries'
 
   const lastActionStr = lastAction
