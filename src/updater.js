@@ -399,7 +399,13 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
   }
 
   await applyUpdate(latestVersion, migration, null, { restart: false })
-  console.log('Update complete. Run `ralph-o-bot start` to restart the daemon.')
+  console.log('Update complete.')
+  if (migration.requiresBoot) {
+    console.log('The service definition has changed — re-run boot to apply it:')
+    console.log(`  sudo env "PATH=$PATH" ralph-o-bot boot`)
+  } else {
+    console.log('Run `ralph-o-bot start` to restart the daemon.')
+  }
 }
 
 // --- Internal helpers -------------------------------------------------------
