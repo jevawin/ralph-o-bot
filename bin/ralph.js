@@ -30,6 +30,9 @@ async function main() {
     case 'restart':
       restart()
       break
+    case 'status':
+      await runStatus()
+      break
     default:
       console.log(`ralph-o-bot v${pkg.version}
 
@@ -39,6 +42,7 @@ Usage:
   ralph-o-bot start --auto-update  Start daemon with automatic update checks
   ralph-o-bot boot             Install and start as a systemd service
   ralph-o-bot boot --auto-update   Install service with automatic update checks
+  ralph-o-bot status           Show version, update, service, activity and resource status
   ralph-o-bot restart          Restart Ralph-o-bot (via systemd if installed, otherwise re-exec)
   ralph-o-bot update           Check for updates, show plan, prompt to apply
   ralph-o-bot update -y        Check for updates and apply without prompting
@@ -72,11 +76,20 @@ async function startDaemon() {
   }
   console.log()
 
+  const { printStatus } = await import('../src/status.js')
+  await printStatus()
+  console.log()
+
   const { runClancy } = await import('../src/clancy.js')
   await runClancy('/clancy:update-docs', process.cwd())
 
   const { startDaemon: runDaemon } = await import('../src/scheduler.js')
   await runDaemon({ autoUpdate })
+}
+
+async function runStatus() {
+  const { printStatus } = await import('../src/status.js')
+  await printStatus()
 }
 
 async function runUpdate() {
@@ -158,14 +171,16 @@ WantedBy=multi-user.target
   execFileSync('systemctl', ['enable', 'ralph-o-bot'])
   execFileSync('systemctl', ['start', 'ralph-o-bot'])
 
-  console.log(`Ralph-o-bot is installed and running.
-Check status with: systemctl status ralph-o-bot`)
+  const { printStatus } = await import('../src/status.js')
+  await printStatus()
 }
 
-function restart() {
+async function restart() {
   const unitFile = '/etc/systemd/system/ralph-o-bot.service'
   if (fs.existsSync(unitFile)) {
     execFileSync('sudo', ['systemctl', 'restart', 'ralph-o-bot'], { stdio: 'inherit' })
+    const { printStatus } = await import('../src/status.js')
+    await printStatus()
   } else {
     execFileSync(process.execPath, [process.argv[1], 'start'], { stdio: 'inherit' })
     process.exit(0)
