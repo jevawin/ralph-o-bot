@@ -26,7 +26,10 @@ Future ideas and proposals live in `roadmap/` — one file per idea. Each file c
 |------|---------|
 | `bin/ralph.js` | CLI entry — subcommands: `start`, `run`, `boot`, `restart`, `status`, `update`, `init`, `reinstall-clancy` |
 | `src/config.js` | Loads `.clancy/.env` + `.env`, exports label names and settings |
-| `src/dispatch.js` | Priority chain: update → review → build → plan → brief. One action per tick. |
+| `src/dispatch.js` | Pipeline runner: update → review → build → plan → brief → new idea. One action per tick. |
+| `src/phases/` | One module per dispatch stage — each exports `(ctx) => Promise<boolean>` |
+| `src/lock.js` | Dispatch lock file — prevents overlaps, records in-flight action for crash visibility |
+| `src/error-reporter.js` | Reports unhandled dispatch errors to GitHub Issues (`ralph:error` label) |
 | `src/scheduler.js` | Sleep-loop daemon, quiet hours, resource check, periodic update check |
 | `src/github.js` | GitHub REST API wrapper (native fetch, no library) |
 | `src/clancy.js` | Shells out to `claude --dangerously-skip-permissions` with a command |
