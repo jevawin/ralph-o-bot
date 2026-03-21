@@ -8,7 +8,7 @@ import { runClancy } from '../../src/clancy.js'
 import { briefPhase } from '../../src/phases/brief.js'
 
 function makeCtx() {
-  return { username: 'testuser', cwd: '/test', log: vi.fn() }
+  return { username: 'testuser', cwd: '/test', log: vi.fn(), setAction: vi.fn() }
 }
 
 beforeEach(() => vi.clearAllMocks())
