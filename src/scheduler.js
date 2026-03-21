@@ -28,26 +28,25 @@ function nowMinutes() {
   return now.getHours() * 60 + now.getMinutes()
 }
 
+/**
+ * Returns true if nowMins falls inside the quiet window [startMins, endMins).
+ * Returns false when start === end (disabled).
+ */
+export function isInQuietHours(nowMins, startMins, endMins) {
+  if (startMins === endMins) return false
+  if (startMins < endMins) {
+    // Same-day window e.g. 09:00–17:00
+    return nowMins >= startMins && nowMins < endMins
+  }
+  // Overnight window e.g. 23:00–07:00
+  return nowMins >= startMins || nowMins < endMins
+}
+
 async function waitForQuietHoursEnd() {
   const start = parseHHMM(RALPH_QUIET_START)
   const end = parseHHMM(RALPH_QUIET_END)
 
-  // 00:00–00:00 means disabled
-  if (start === end) return
-
-  const now = nowMinutes()
-
-  // Determine if we're inside the quiet window
-  let inQuiet
-  if (start < end) {
-    // Same-day window e.g. 09:00–17:00
-    inQuiet = now >= start && now < end
-  } else {
-    // Overnight window e.g. 23:00–07:00
-    inQuiet = now >= start || now < end
-  }
-
-  if (!inQuiet) return
+  if (!isInQuietHours(nowMinutes(), start, end)) return
 
   // Sleep until end of quiet window
   const msUntilEnd = (() => {
@@ -61,7 +60,7 @@ async function waitForQuietHoursEnd() {
   await sleep(msUntilEnd)
 }
 
-function resourcesOk() {
+export function resourcesOk() {
   if (!RALPH_RESOURCE_CHECK) return true
 
   const freeMB = os.freemem() / 1024 / 1024
