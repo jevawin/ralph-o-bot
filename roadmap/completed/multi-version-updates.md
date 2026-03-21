@@ -1,6 +1,6 @@
 # Multi-Version Update Chain
 
-**Status:** Backlog — planned, ready to build
+**Status:** Completed — v0.3.4
 
 The current update flow assumes one hop: installed version → latest. If multiple versions are published between checks, intermediate `migration.json` files are skipped entirely. This needs to be handled before `boardChanges` are used seriously.
 
