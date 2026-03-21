@@ -124,6 +124,26 @@ export async function closeIssue(issueNumber) {
   })
 }
 
+/** Add a comment to an issue or PR */
+export async function createIssueComment(issueNumber, body) {
+  return req(`/repos/${GITHUB_REPO}/issues/${issueNumber}/comments`, {
+    method: 'POST',
+    body: { body }
+  })
+}
+
+/** Create a label, silently ignoring 422 if it already exists */
+export async function ensureLabel(name, color, description = '') {
+  try {
+    await req(`/repos/${GITHUB_REPO}/labels`, {
+      method: 'POST',
+      body: { name, color, description }
+    })
+  } catch (err) {
+    if (!err.message.includes('422')) throw err
+  }
+}
+
 /** List open issues by label (no assignee filter) */
 export async function listIssuesByLabel(label) {
   const params = new URLSearchParams({ state: 'open', labels: label, per_page: '100' })

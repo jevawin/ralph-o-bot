@@ -1,5 +1,6 @@
 import os from 'node:os'
 import { dispatch } from './dispatch.js'
+import { reportError } from './error-reporter.js'
 import {
   RALPH_SLEEP_SECONDS,
   RALPH_QUIET_START,
@@ -105,6 +106,7 @@ export async function startDaemon({ autoUpdate = false } = {}) {
         await dispatch()
       } catch (err) {
         log(`Error during dispatch: ${err.message}`)
+        await reportError(err)
       }
     }
 
