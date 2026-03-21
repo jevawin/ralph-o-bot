@@ -27,6 +27,9 @@ async function main() {
     case 'update':
       await runUpdate()
       break
+    case 'restart':
+      restart()
+      break
     default:
       console.log(`ralph-o-bot v${pkg.version}
 
@@ -36,6 +39,7 @@ Usage:
   ralph-o-bot start --auto-update  Start daemon with automatic update checks
   ralph-o-bot boot             Install and start as a systemd service
   ralph-o-bot boot --auto-update   Install service with automatic update checks
+  ralph-o-bot restart          Restart Ralph-o-bot (via systemd if installed, otherwise re-exec)
   ralph-o-bot update           Check for updates, show plan, prompt to apply
   ralph-o-bot update -y        Check for updates and apply without prompting
 `)
@@ -156,6 +160,16 @@ WantedBy=multi-user.target
 
   console.log(`Ralph-o-bot is installed and running.
 Check status with: systemctl status ralph-o-bot`)
+}
+
+function restart() {
+  const unitFile = '/etc/systemd/system/ralph-o-bot.service'
+  if (fs.existsSync(unitFile)) {
+    execFileSync('sudo', ['systemctl', 'restart', 'ralph-o-bot'], { stdio: 'inherit' })
+  } else {
+    execFileSync(process.execPath, [process.argv[1], 'start'], { stdio: 'inherit' })
+    process.exit(0)
+  }
 }
 
 function promptYN(question) {

@@ -402,9 +402,9 @@ export async function applyUpdateInteractive({ skipConfirm = false } = {}) {
   console.log('Update complete.')
   if (migration.requiresBoot) {
     console.log('The service definition has changed — re-run boot to apply it:')
-    console.log(`  sudo env "PATH=$PATH" ralph-o-bot boot`)
+    console.log(`  ralph-o-bot boot`)
   } else {
-    console.log('Run `ralph-o-bot start` to restart the daemon.')
+    console.log('Run `ralph-o-bot restart` to restart.')
   }
 }
 
