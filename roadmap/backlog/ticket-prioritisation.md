@@ -1,6 +1,6 @@
 # Ticket Prioritisation Convention
 
-**Status:** Planned
+**Status:** Backlog — no priority order yet, implement when dispatch logic needs it
 
 Allow issues to signal priority to Ralph so he processes higher-priority tickets first within a label queue, rather than always picking the earliest by created date.
 

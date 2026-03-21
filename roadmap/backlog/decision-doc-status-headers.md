@@ -19,7 +19,7 @@ All roadmap files should lead with:
 Optionally add a `**Depends on:**` line for items with prerequisites:
 
 ```markdown
-**Depends on:** phase-pipeline-refactor
+**Depends on:** (none)
 ```
 
 ## Implementation
