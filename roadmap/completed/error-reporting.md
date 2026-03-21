@@ -1,7 +1,6 @@
 # Error Reporting via GitHub Issues
 
-**Status:** Backlog — priority #4
-**Depends on:** github-actions-ci-release (deploy tooling)
+**Status:** Shipped
 
 When Ralph encounters an unhandled error during a dispatch tick, it should open a GitHub issue so the problem is visible without needing to SSH in and tail logs.
 
