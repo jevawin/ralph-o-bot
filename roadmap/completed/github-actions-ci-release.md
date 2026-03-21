@@ -1,6 +1,6 @@
 # GitHub Actions: CI + Auto-Release
 
-**Status:** Backlog — priority #2
+**Status:** Shipped
 **Depends on:** tests (CI is only meaningful once there's something to run; release auto-tagging half can land independently)
 
 Add GitHub Actions workflows for CI (lint, test on PRs) and auto-release (tag + GitHub Release on version bump to main).

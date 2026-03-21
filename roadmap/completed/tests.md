@@ -1,7 +1,6 @@
 # Test Suite
 
-**Status:** Backlog — priority #1 (phase-pipeline-refactor now shipped)
-**Depends on:** ~~phase-pipeline-refactor~~ (done)
+**Status:** Shipped
 
 Add a unit test suite for Ralph's core logic modules — dispatch stages, sentiment classifier, scheduler conditions, and env validation.
 
