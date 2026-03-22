@@ -1,8 +1,10 @@
 {
-  "version": "0.4.6",
-  "clancyVersion": "0.8.11",
-  "notes": "Background daemon — start and restart no longer block the terminal.",
-  "fixes": ["ralph-o-bot start now runs the daemon in the background and returns control to the terminal. Logs go to logs/ralph.log.", "ralph-o-bot update restart now uses systemctl when available, so it no longer hijacks the terminal."],
+  "version": "0.4.7",
+  "clancyVersion": "0.8.13",
+  "notes": "Bump Clancy to 0.8.13 (epic parent detection fix, label safety).",
+  "fixes": [
+    "Updates bundled Clancy to 0.8.13, which fixes epic parent detection (child issues without milestones can now find their parents, fixing PR auto-close) and hardens label transition ordering."
+  ],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
