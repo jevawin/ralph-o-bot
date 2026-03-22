@@ -1,6 +1,6 @@
 {
   "name": "ralph-o-bot",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "type": "module",
   "description": "Automation layer that watches a GitHub Issues board and dispatches Clancy commands",
   "bin": {
@@ -16,7 +16,7 @@
     "test": "vitest run",
     "prepublishOnly": "npm test"
   },
-  "clancyVersion": "0.8.7",
+  "clancyVersion": "0.8.11",
   "dependencies": {
     "dotenv": "^16.0.0"
   },

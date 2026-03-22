@@ -1,9 +1,8 @@
 {
-  "version": "0.4.4",
-  "clancyVersion": "0.8.7",
-  "notes": "PR review instructions prompt.",
-  "features": ["Ralph now posts a one-time comment on each PR when it first enters review, reminding you to reply `approved` to merge or `rework: your feedback` to request changes."],
-  "fixes": [],
+  "version": "0.4.5",
+  "clancyVersion": "0.8.11",
+  "notes": "Bump Clancy to 0.8.11 (PR/comment bug fix).",
+  "fixes": ["Updates bundled Clancy to 0.8.11, which fixes a bug with PRs and comments."],
   "boardChanges": [],
   "requiresBoot": false,
   "requiresManual": false
