@@ -1,11 +1,9 @@
 {
-  "version": "0.4.9",
-  "clancyVersion": "0.8.17",
-  "notes": "Fix spin loop on PR instructions comment; fix child issue auto-close for epic branch merges.",
+  "version": "0.4.10",
+  "clancyVersion": "0.8.20",
+  "notes": "Bump Clancy to 0.8.20.",
   "fixes": [
-    "check-review: skip Ralph's own instructions comment (<!-- ralph-pr-instructions -->) when scanning for the latest user comment — previously caused an infinite loop where Ralph would re-run Clancy on every tick because it mistook its own comment for unaddressed feedback",
-    "check-review: explicitly close child issues after merging a PR into an epic branch — GitHub's Closes #N keyword only auto-closes issues on merge to the default branch, so without this Ralph would re-queue already-completed tickets and Clancy would attempt to rebuild them",
-    "config: export BASE_BRANCH (from CLANCY_BASE_BRANCH, defaulting to main) for use in the epic-branch close check"
+    "Bump chief-clancy from 0.8.17 to 0.8.20"
   ],
   "boardChanges": [],
   "requiresBoot": false,
