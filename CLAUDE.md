@@ -85,7 +85,7 @@ export const BUILD_LABEL = process.env.CLANCY_LABEL_BUILD ?? 'clancy:build'
 ### 1. review
 List `BUILD_LABEL` issues assigned to current user. For each, find its open PR. Find most recent PR comment from `jevawin`:
 - No comment → skip (waiting)
-- exactly `"approved"` (case-insensitive) → squash merge, delete branch (best-effort), GitHub auto-closes issue
+- exactly `"approved"` (case-insensitive) → squash merge, delete branch (best-effort). If PR targets `main`, GitHub auto-closes the issue via `Closes #N`. If PR targets an epic branch, Ralph closes the issue explicitly (GitHub only auto-closes on merge to default branch).
 - anything else → check if a commit landed after the comment; if yes skip (already acted), if no → `/clancy:once --afk #N`
 
 PR may target `main` or an epic branch (`epic/{key}`) — Ralph merges to whatever `pr.base.ref` is. Cloudflare only deploys when target is `main`.
