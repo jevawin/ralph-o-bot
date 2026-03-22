@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import fs from 'node:fs'
 import readline from 'node:readline'
 import { createRequire } from 'node:module'
 import { RALPH_MOCK_LATEST_VERSION } from './config.js'
@@ -431,10 +432,17 @@ function promptYN(question, defaultYes = false) {
 
 function restart() {
   if (process.env.INVOCATION_ID) {
-    // Under systemd — exit 0, Restart=always brings up the new binary
+    // Under systemd daemon — exit 0, Restart=always brings up the new binary
     process.exit(0)
   }
-  // Manual start — exec new binary in-place (blocks until child exits)
+  const unitFile = '/etc/systemd/system/ralph-o-bot.service'
+  if (fs.existsSync(unitFile)) {
+    // systemd manages the service — restart it in the background
+    execFileSync('sudo', ['systemctl', 'restart', 'ralph-o-bot'], { stdio: 'inherit' })
+    console.log('Ralph-o-bot restarted.')
+    process.exit(0)
+  }
+  // No systemd — start will background itself
   execFileSync(process.execPath, [process.argv[1], 'start'], { stdio: 'inherit' })
   process.exit(0)
 }

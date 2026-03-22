@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execSync, execFileSync } from 'node:child_process'
+import { execSync, execFileSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -76,17 +76,46 @@ async function startDaemon() {
   await validateConfig()
 
   const isSystemd = Boolean(process.env.INVOCATION_ID)
-  console.log(`Ralph-o-bot started! Current status:`)
-  console.log(`Watching ${GITHUB_REPO} every ${RALPH_SLEEP_SECONDS}s. Ctrl+C to stop.`)
-  if (autoUpdate) console.log('Auto-update: enabled.')
-  if (!isSystemd) {
-    console.log(`\nTip: run 'ralph-o-bot boot' to install as a system service that starts on boot.`)
-  }
-  console.log()
+  const isDaemon = Boolean(process.env.RALPH_DAEMON)
 
-  const { printStatus } = await import('../src/status.js')
-  await printStatus()
-  console.log()
+  if (!isSystemd && !isDaemon) {
+    // Interactive invocation without systemd — print status, spawn background daemon, return
+    console.log(`Ralph-o-bot started! Current status:`)
+    console.log(`Watching ${GITHUB_REPO} every ${RALPH_SLEEP_SECONDS}s.`)
+    if (autoUpdate) console.log('Auto-update: enabled.')
+    console.log(`\nTip: run 'ralph-o-bot boot' to install as a system service that starts on boot.`)
+    console.log()
+
+    const { printStatus } = await import('../src/status.js')
+    await printStatus()
+    console.log()
+
+    const logsDir = path.join(process.cwd(), 'logs')
+    fs.mkdirSync(logsDir, { recursive: true })
+    const logFd = fs.openSync(path.join(logsDir, 'ralph.log'), 'a')
+    const startArgs = ['start', ...(autoUpdate ? ['--auto-update'] : [])]
+    const child = spawn(process.execPath, [process.argv[1], ...startArgs], {
+      env: { ...process.env, RALPH_DAEMON: '1' },
+      detached: true,
+      stdio: ['ignore', logFd, logFd],
+    })
+    child.unref()
+    fs.closeSync(logFd)
+    console.log(`Daemon running in background. Logs → logs/ralph.log`)
+    return
+  }
+
+  // systemd or RALPH_DAEMON mode — run in foreground
+  if (isSystemd) {
+    console.log(`Ralph-o-bot started! Current status:`)
+    console.log(`Watching ${GITHUB_REPO} every ${RALPH_SLEEP_SECONDS}s.`)
+    if (autoUpdate) console.log('Auto-update: enabled.')
+    console.log()
+
+    const { printStatus } = await import('../src/status.js')
+    await printStatus()
+    console.log()
+  }
 
   const { runClancy } = await import('../src/clancy.js')
   await runClancy('/clancy:update-docs', process.cwd())
