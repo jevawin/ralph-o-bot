@@ -10,10 +10,11 @@ dotenv.config({ path: path.join(process.cwd(), '.clancy/.env') })
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 // Label names — read directly from Clancy's env vars, matching Clancy's own defaults
-export const BRIEF_LABEL    = process.env.CLANCY_LABEL_BRIEF ?? 'clancy:brief'
-export const PLAN_LABEL     = process.env.CLANCY_LABEL_PLAN  ?? 'clancy:plan'
-export const BUILD_LABEL    = process.env.CLANCY_LABEL_BUILD ?? 'clancy:build'
+export const BRIEF_LABEL    = process.env.CLANCY_LABEL_BRIEF    ?? 'clancy:brief'
+export const PLAN_LABEL     = process.env.CLANCY_LABEL_PLAN     ?? 'clancy:plan'
+export const BUILD_LABEL    = process.env.CLANCY_LABEL_BUILD    ?? 'clancy:build'
 export const NEW_IDEA_LABEL = 'new-idea'
+export const BASE_BRANCH    = process.env.CLANCY_BASE_BRANCH    ?? 'main'
 
 // GitHub
 export const GITHUB_TOKEN = process.env.GITHUB_TOKEN

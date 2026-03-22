@@ -1,9 +1,11 @@
 {
-  "version": "0.4.8",
+  "version": "0.4.9",
   "clancyVersion": "0.8.17",
-  "notes": "Bump Clancy to 0.8.17 (epic branch targeting fix, E2E test infrastructure).",
+  "notes": "Fix spin loop on PR instructions comment; fix child issue auto-close for epic branch merges.",
   "fixes": [
-    "Updates bundled Clancy to 0.8.17, which fixes epic branch targeting (child issues using #N refs now correctly resolve to epic/{number} instead of milestone/{slug}), adds a guard against GitHub Search API indexing delays on new child tickets, and ships E2E test infrastructure with real GitHub API coverage."
+    "check-review: skip Ralph's own instructions comment (<!-- ralph-pr-instructions -->) when scanning for the latest user comment — previously caused an infinite loop where Ralph would re-run Clancy on every tick because it mistook its own comment for unaddressed feedback",
+    "check-review: explicitly close child issues after merging a PR into an epic branch — GitHub's Closes #N keyword only auto-closes issues on merge to the default branch, so without this Ralph would re-queue already-completed tickets and Clancy would attempt to rebuild them",
+    "config: export BASE_BRANCH (from CLANCY_BASE_BRANCH, defaulting to main) for use in the epic-branch close check"
   ],
   "boardChanges": [],
   "requiresBoot": false,

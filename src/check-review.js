@@ -1,5 +1,5 @@
-import { BUILD_LABEL } from './config.js'
-import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch } from './github.js'
+import { BUILD_LABEL, BASE_BRANCH } from './config.js'
+import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch, closeIssue } from './github.js'
 import { classify } from './sentiment.js'
 import { appendPRInstructions } from './instructions.js'
 
@@ -25,11 +25,12 @@ export async function checkReview(username) {
 
     await appendPRInstructions(pr, comments)
 
-    // Find most recent comment from jevawin
+    // Find most recent comment from jevawin, excluding Ralph's own instructions comment
     let lastUserComment = null
     for (let i = comments.length - 1; i >= 0; i--) {
-      if (comments[i].user?.login === username) {
-        lastUserComment = comments[i]
+      const c = comments[i]
+      if (c.user?.login === username && !c.body.includes('<!-- ralph-pr-instructions -->')) {
+        lastUserComment = c
         break
       }
     }
@@ -43,6 +44,11 @@ export async function checkReview(username) {
         await deleteBranch(pr.head.ref)
       } catch {
         // Branch delete is best-effort
+      }
+      // GitHub only auto-closes issues via "Closes #N" when merging to the default branch.
+      // For epic-branch PRs, close the issue explicitly so Ralph doesn't re-trigger a build.
+      if (pr.base.ref !== BASE_BRANCH) {
+        await closeIssue(issue.number)
       }
       return { merged: true, pr, issue }
     }
