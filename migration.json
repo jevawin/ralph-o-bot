@@ -1,9 +1,9 @@
 {
-  "version": "0.4.7",
-  "clancyVersion": "0.8.13",
-  "notes": "Bump Clancy to 0.8.13 (epic parent detection fix, label safety).",
+  "version": "0.4.8",
+  "clancyVersion": "0.8.17",
+  "notes": "Bump Clancy to 0.8.17 (epic branch targeting fix, E2E test infrastructure).",
   "fixes": [
-    "Updates bundled Clancy to 0.8.13, which fixes epic parent detection (child issues without milestones can now find their parents, fixing PR auto-close) and hardens label transition ordering."
+    "Updates bundled Clancy to 0.8.17, which fixes epic branch targeting (child issues using #N refs now correctly resolve to epic/{number} instead of milestone/{slug}), adds a guard against GitHub Search API indexing delays on new child tickets, and ships E2E test infrastructure with real GitHub API coverage."
   ],
   "boardChanges": [],
   "requiresBoot": false,
