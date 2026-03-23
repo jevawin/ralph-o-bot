@@ -36,15 +36,24 @@ export async function runClancy(command, cwd) {
     child.stdin.write(command + '\n')
     child.stdin.end()
 
-    child.stdout.on('data', d => fs.appendFileSync(LOG_FILE, d))
-    child.stderr.on('data', d => fs.appendFileSync(LOG_FILE, d))
+    const chunks = { stdout: [], stderr: [] }
+
+    child.stdout.on('data', d => { fs.appendFileSync(LOG_FILE, d); chunks.stdout.push(d) })
+    child.stderr.on('data', d => { fs.appendFileSync(LOG_FILE, d); chunks.stderr.push(d) })
 
     child.on('close', code => {
       log(`← Finished: ${command} (exit ${code})`)
       if (code === 0) {
         resolve()
       } else {
-        reject(new Error(`clancy exited with code ${code}`))
+        const output = Buffer.concat(chunks.stderr).toString().trim()
+          || Buffer.concat(chunks.stdout).toString().trim()
+        const lastLine = output.split('\n').filter(Boolean).pop() || ''
+        const summary = lastLine.slice(0, 200)
+        const err = new Error(summary || `clancy exited with code ${code}`)
+        err.exitCode = code
+        err.clancyOutput = output.slice(-2000) // last 2 KB for the issue body
+        reject(err)
       }
     })
 

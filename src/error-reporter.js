@@ -22,15 +22,21 @@ function errorKey(err) {
 }
 
 function formatBody(err) {
-  return [
+  const lines = [
     `**Time:** ${new Date().toISOString()}`,
     `**Ralph version:** ${getVersion()}`,
     '',
     '**Error:**',
     '```',
-    err?.stack || String(err),
+    err?.message || String(err),
     '```',
-  ].join('\n')
+  ]
+
+  if (err?.clancyOutput) {
+    lines.push('', '**Clancy output:**', '```', err.clancyOutput, '```')
+  }
+
+  return lines.join('\n')
 }
 
 /**
