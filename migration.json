@@ -1,9 +1,12 @@
 {
-  "version": "0.4.10",
-  "clancyVersion": "0.8.20",
-  "notes": "Bump Clancy to 0.8.20.",
+  "version": "0.4.11",
+  "clancyVersion": "0.8.23",
+  "notes": "Bump Clancy to 0.8.23 and fix PR merge safety checks.",
   "fixes": [
-    "Bump chief-clancy from 0.8.17 to 0.8.20"
+    "Bump chief-clancy from 0.8.20 to 0.8.23",
+    "Check PR mergeability before attempting squash merge",
+    "Stricter PR-to-issue matching in findPRForIssue",
+    "Include Clancy stdout/stderr in error reports"
   ],
   "boardChanges": [],
   "requiresBoot": false,
