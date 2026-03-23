@@ -1,5 +1,5 @@
 import { BUILD_LABEL, BASE_BRANCH } from './config.js'
-import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, deleteBranch, closeIssue } from './github.js'
+import { listIssues, findPRForIssue, listPRComments, listPRCommits, mergePR, getPR, deleteBranch, closeIssue } from './github.js'
 import { classify } from './sentiment.js'
 import { appendPRInstructions } from './instructions.js'
 
@@ -38,6 +38,12 @@ export async function checkReview(username) {
     if (!lastUserComment) continue  // No jevawin comment yet — still waiting
 
     if (classify(lastUserComment.body) === 'approved') {
+      // Check mergeability before attempting — avoid looping on conflict
+      const full = await getPR(pr.number)
+      if (full.mergeable === false) {
+        return { command: `/clancy:once --afk #${issue.number}`, issue, pr }
+      }
+
       const commitTitle = `${pr.title} (#${pr.number})`
       await mergePR(pr.number, commitTitle)
       try {
