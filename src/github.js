@@ -157,8 +157,6 @@ export async function listIssuesByLabel(label) {
  */
 export async function findPRForIssue(issueNumber) {
   const prs = await listOpenPRs()
-  return prs.filter(pr => {
-    const body = (pr.body || '').toLowerCase()
-    return body.includes(`#${issueNumber}`) || body.includes(`closes #${issueNumber}`)
-  })
+  const closing = new RegExp(`(?:closes|fixes|resolves|part of)\\s+#${issueNumber}\\b`, 'i')
+  return prs.filter(pr => closing.test(pr.body || ''))
 }
