@@ -8,6 +8,10 @@ Named after Ralph Wiggum — Chief Clancy Wiggum's son.
 
 **Design principle: Ralph is the developer. Clancy is the developer's brain.** Ralph observes board/PR state and dispatches the command a developer would run next. It never replicates Clancy's internal logic. If Ralph is tempted to inspect something Clancy already inspects, that's a sign Ralph is doing too much.
 
+## Clancy
+
+**Never patch or modify Clancy.** Clancy is a separate project — if you find a bug or need a change, submit an issue to https://github.com/Pushedskydiver/clancy. Ralph's `src/clancy.js` is Ralph's own wrapper for shelling out to the `claude` CLI; it is not part of Clancy itself.
+
 ## Git & Publishing
 
 **Commit logically separate changes as separate commits** — e.g. a feature change and a roadmap/docs update should be two commits, not one. Stage files explicitly by group, write a focused message for each, then push at the end.
